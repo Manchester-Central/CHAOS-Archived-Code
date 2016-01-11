@@ -1,0 +1,123 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Intake.cpp                                       
+ **                                                             
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+#include "Intake.h"
+
+Intake::Intake() : PIDSource()
+{
+	extenderPot = new AnalogChannel(INTAKE_POT_CHANNEL);
+	extenderTalon = new Talon(INTAKE_EXTENDER_PORT);
+	rollerTalon = new Talon(INTAKE_ROLLER_PORT);
+	
+	extenderMode = MANUAL_EXTENDER_ENABLED;
+	
+	
+	extenderController = new PIDController(EXTENDER_P, EXTENDER_I, EXTENDER_D,
+			this, extenderTalon, EXTENDER_PERIOD);
+	extenderController->SetInputRange(0.0, EXTENDER_MAX_DISTANCE);
+	extenderController->SetOutputRange(EXTENDER_MIN_SPEED, EXTENDER_MAX_SPEED);
+	
+	if (extenderMode == MANUAL_EXTENDER_ENABLED)
+	{
+		extenderController->Disable();
+	}
+	else 
+	{
+		extenderController->Enable();
+	}
+	
+	targetPosition = 0.0;
+	extenderPower = 0.0;
+	rollerPower = 0.0;
+	
+}
+
+void Intake::move(double power)
+{
+
+	
+	extenderPower = power;
+}
+
+void Intake::spinRoller(double power)
+{
+	rollerPower = power;
+}
+
+void Intake::handle(void)
+{
+	if(extenderMode != lastExtenderMode)
+	{
+		if(extenderMode == MANUAL_EXTENDER_ENABLED)
+		{
+			extenderController->Disable();
+		}
+		else
+		{
+			extenderController->Enable();
+		}
+	}
+	
+	if (extenderMode == MANUAL_EXTENDER_ENABLED)
+	{
+		if(shooter->isReset() || extenderPower >= 0.0)
+		{
+			extenderTalon->SetSpeed(extenderPower);
+		}
+		else
+		{
+			extenderTalon->SetSpeed(EXTENDER_SPEED_STOP);
+		}
+	}
+	else
+	{
+		extenderController->SetSetpoint(targetPosition);
+	}
+	
+	lastExtenderMode = extenderMode;
+	
+	
+	rollerTalon->SetSpeed(rollerPower);
+}
+
+void Intake::setExtenderTarget(double targetPosition)
+{
+	Intake::targetPosition = targetPosition;
+}
+
+double Intake::PIDGet(void)
+{
+	return getCurrentPosition();
+}
+
+double Intake::getCurrentPosition(void) //in inches, 0 when fully retracted
+{
+	float potDistance;
+	potDistance = (extenderPot->GetValue()*INTAKE_INCHES_PER_COUNT) - INTAKE_POT_OFFSET;
+	printf ("Pot raw value: %d, converted value: %f\n", extenderPot->GetValue(), potDistance);
+	return potDistance;
+}
+
+double Intake::getPotValue(double inches)
+{
+	double potValue;
+	potValue = (inches + INTAKE_POT_OFFSET)/INTAKE_INCHES_PER_COUNT;
+	return potValue;
+}
+
+void Intake::setExtenderMode(bool manualModeEnabled)
+{
+	extenderMode = manualModeEnabled;
+}
+
+void Intake::setShooter(Shooter *shooter)
+{
+	Intake::shooter = shooter;
+}

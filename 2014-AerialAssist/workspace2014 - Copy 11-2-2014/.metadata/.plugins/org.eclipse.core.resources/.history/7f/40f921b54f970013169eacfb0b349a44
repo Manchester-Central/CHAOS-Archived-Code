@@ -1,0 +1,91 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Intake.h                                       
+ **                                                             
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+#ifndef INTAKE_H_
+#define INTAKE_H_
+
+#include "WPILib.h"
+
+//#include "PIDController.h"
+
+#define INTAKE_ROLLER_DIRECTION 1.0
+#define INTAKE_EXTENDER_DIRECTION -1.0
+
+#define INTAKE_EXTENDER_PORT 9
+#define INTAKE_ROLLER_PORT 10
+#define INTAKE_POT_CHANNEL 1
+
+#define INTAKE_ROLLER_SPIT_POWER -1.0
+#define INTAKE_ROLLER_IN_POWER 1.0
+#define INTAKE_ROLLER_STOP_POWER 0.0
+
+#define INTAKE_ROLLER_IN_STATE true
+#define INTAKE_ROLLER_STOP_STATE false
+#define INTAKE_POT_OFFSET 0.9171   //in inches
+#define INTAKE_INCHES_PER_COUNT 0.03396667
+
+#define MANUAL_EXTENDER_ENABLED true
+#define AUTO_EXTENDER_ENABLED false
+
+#define EXTENDER_P 1.0
+#define EXTENDER_I 0.0
+#define EXTENDER_D 0.0
+#define EXTENDER_PERIOD 0.05
+#define EXTENDER_MAX_DISTANCE 15.0
+#define EXTENDER_MIN_SPEED -0.3
+#define EXTENDER_MAX_SPEED 0.3
+
+#define EXTENDER_SPEED_STOP 0.0
+
+class Intake : public PIDSource
+{
+public:
+	Intake(void);
+	
+	//prototypes
+	double PIDGet(void);
+	
+	void move(double power);
+	
+	void spinRoller(double power);
+	
+	void handle(void);
+	
+	double getCurrentPosition(void); //in inches, 0 when fully retracted
+	
+	double getPotValue(double inches);
+	
+	void setExtenderMode(bool manualModeEnabled);
+	
+	void setExtenderTarget (double targetInches);
+	
+	void setShooter (Shooter *shooter);
+	
+private:
+	
+	
+	//things
+	PIDController *extenderController;
+	double targetPosition;
+	double extenderPower;
+	double rollerPower;
+	Talon *extenderTalon;
+	Talon *rollerTalon;
+	AnalogChannel *extenderPot;
+	bool extenderMode, lastExtenderMode;
+	
+	Shooter *shooter;
+};
+
+
+
+
+#endif

@@ -1,0 +1,32 @@
+Drive d = new Drive();
+
+	RightFrontDriveTalon = new Talon(RIGHT_FRONT_DRIVE_PORT);
+	RightMiddleDriveTalon = new Talon(RIGHT_MIDDLE_DRIVE_PORT);
+	RightBackDriveTalon = new Talon(RIGHT_BACK_DRIVE_PORT);
+	
+	LeftFrontDriveTalon = new Talon(LEFT_FRONT_DRIVE_PORT);
+	LeftMiddleDriveTalon = new Talon(LEFT_MIDDLE_DRIVE_PORT);
+	LeftBackDriveTalon = new Talon(LEFT_BACK_DRIVE_PORT);
+	
+	RightDriveEncoder = new Encoder(RIGHT_DRIVE_CHANNEL_A, RIGHT_DRIVE_CHANNEL_B, RIGHT_ENCODER_DIRECTION,Encoder::k4X);
+	LeftDriveEncoder = new Encoder(LEFT_DRIVE_CHANNEL_A, LEFT_DRIVE_CHANNEL_B, LEFT_ENCODER_DIRECTION,Encoder::k4X);
+	RightDriveEncoder->SetDistancePerPulse(DRIVE_INCHES_PER_COUNT);
+	LeftDriveEncoder->SetDistancePerPulse(DRIVE_INCHES_PER_COUNT);
+	
+	autoDriveEnable = false;
+
+d->AutoDrive();
+
+	if(fabs(RightDriveEncoder->GetDistance()) + fabs(LeftDriveEncoder->GetDistance()) <= fabs(rightDistance) + fabs(leftDistance))
+	{
+		Drive::TeleopDrive(leftPower, rightPower);
+		
+		printf("left encoder distance: %f ",LeftDriveEncoder->GetDistance());
+		printf("right encoder distance: %f \n ",RightDriveEncoder->GetDistance());
+	}
+	else 
+	{
+		printf("left encoder distance: %f ",LeftDriveEncoder->GetDistance());
+		printf("right encoder distance: %f \n ",RightDriveEncoder->GetDistance());
+		
+		Drive::TeleopDrive(STOP, STOP);

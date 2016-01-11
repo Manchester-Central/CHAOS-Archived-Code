@@ -1,0 +1,48 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Intake.h                                       
+ **                                                             
+ **   About:    
+ **                                                                
+ **   Property of Chaos, Copyright 2014
+ **   Written by:  
+ **              Ben Papp
+ **              Eric Moy
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+#ifndef INTAKE_H_
+#define INTAKE_H_
+#include "WPILib.h"
+
+class Intake
+{
+public:
+	Intake(void);
+	
+	//prototypes
+	void move(double power);
+	
+	void spinRoller(double power);
+	
+	void handle(void);
+	
+	
+	
+	
+private:
+	//things
+	double position; //in inches, 0 when fully retracted
+	
+	
+	
+};
+
+
+
+
+#endif

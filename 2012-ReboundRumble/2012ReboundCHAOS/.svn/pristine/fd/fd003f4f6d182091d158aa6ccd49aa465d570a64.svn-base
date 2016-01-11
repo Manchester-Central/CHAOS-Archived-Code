@@ -1,0 +1,26 @@
+#ifndef BUTTONS_H_
+#define BUTTONS_H_
+
+//Driver Gamepad
+#define DRIVER_GAMEPAD_PORT 1
+
+#define BUTTON_BALANCE 8
+#define BUTTON_GYRO_RESET 1
+
+#define TOGGLE_UP_BUTTON 4
+#define TOGGLE_DOWN_BUTTON 2
+
+#define BUTTON_SWEEP_LEFT 5
+#define BUTTON_SWEEP_RIGHT 6
+
+//Operator Gamepad
+#define OPERATOR_GAMEPAD_PORT 2
+#define BUTTON_SHOOT 8
+#define BALL_RESET_BUTTON 4
+
+//#define TOGGLE_UP_BUTTON 6
+//#define TOGGLE_DOWN_BUTTON 8
+
+#define BUTTON_INTAKE 2
+#define BUTTON_MANUAL 7
+#endif 

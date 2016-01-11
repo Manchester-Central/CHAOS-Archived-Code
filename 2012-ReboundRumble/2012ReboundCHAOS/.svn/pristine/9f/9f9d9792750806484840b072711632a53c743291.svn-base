@@ -1,0 +1,682 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Main.cpp                                        
+ **                                                             
+ **   About:    The Main ReboundRumble Robot Class
+ **                                                             
+ **   Property of Chaos, Copyright 2012
+ **   Written by:  
+ **               Josh Allard
+ **               Eric Moy
+ **               Ben Papp
+ **               Zain Abbas
+ **				  CHAOS.           
+ **                                                                                           
+ **   2012 1 12             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+#include "Main.h"
+
+Main::Main(void)
+	: mBuffer( 5, 0.0 ), mBufferLeft(15, 0.0), mBufferRight(15, 0.0)
+{
+	//RobotDrive
+	//Base = new RobotDrive(FRONT_LEFT_DRIVE_PORT, REAR_LEFT_DRIVE_PORT, FRONT_RIGHT_DRIVE_PORT, REAR_RIGHT_DRIVE_PORT);
+	Base = new RobotDrive(LEFT_DRIVE_PORT, RIGHT_DRIVE_PORT);
+	Base->SetSafetyEnabled(false);
+
+	//Base = new RobotDrive(FRONT_LEFT_DRIVE_PORT, FRONT_RIGHT_DRIVE_PORT);
+	//Base = new RobotDrive(FRONT_LEFT_TRANSMISSION_MOTOR_CHANNEL, REAR_LEFT_TRANSMISSION_MOTOR_CHANNEL, FRONT_RIGHT_TRANSMISSION_MOTOR_CHANNEL, REAR_RIGHT_TRANSMISSION_MOTOR_CHANNEL);                               
+	//
+	
+	LeftDriveEncoder = new Encoder(DIGITAL_MODULE, LEFT_ENCODER_PORT_1, DIGITAL_MODULE, LEFT_ENCODER_PORT_2, false);
+	LeftDriveEncoder->SetDistancePerPulse(DRIVE_ENCODER_DISTANCE);
+	RightDriveEncoder = new Encoder(DIGITAL_MODULE, RIGHT_ENCODER_PORT_1, DIGITAL_MODULE, RIGHT_ENCODER_PORT_2, false);
+	RightDriveEncoder->SetDistancePerPulse(DRIVE_ENCODER_DISTANCE);
+
+	//Gamepads
+	DriverGamepad = new Gamepad(DRIVER_GAMEPAD_PORT);
+	OperatorGamepad = new Gamepad(OPERATOR_GAMEPAD_PORT);
+
+	//AnaChan = new AnalogChannel(ANALOG_MODULE, 2);
+
+	VEXGyro = new Gyro(ANALOG_MODULE, GYRO_CHANNEL);
+	VEXGyro->Reset();
+	VEXAccel = new Accelerometer(ANALOG_MODULE, ACCEL_CHANNEL);
+	DrivingGyro = new Gyro(ANALOG_MODULE, DRIVING_GYRO_CHANNEL);
+	DrivingGyro->Reset();
+
+	//Shooter
+
+	//BridgeToggle
+	BridgeToggleUpSwitch = new DigitalInput(DIGITAL_MODULE, TOGGLE_UP_SWITCH_PORT);
+	BridgeToggleDownSwitch = new DigitalInput(DIGITAL_MODULE, TOGGLE_DOWN_SWITCH_PORT);
+	BridgeToggleMotor = new Victor(DIGITAL_MODULE, BRIDGE_TOGGLE_MOTOR_PORT);
+	
+	AngleCorrection = 0;
+	GyroLoopCount = 0;
+	VEXTimer = new Timer;
+	
+	LimitSwitch = new DigitalInput(DIGITAL_MODULE, 1);
+	LightSensor = new DigitalInput(DIGITAL_MODULE, 2);
+	DistanceSensor = new AnalogChannel(ANALOG_MODULE, DISTANCE_SENSOR_PORT);
+	
+	ScoringMechanism = new Manipulator(OperatorGamepad);
+
+	//Light Alignment
+	FrontLightSensor = new DigitalInput(DIGITAL_MODULE, FRONT_LIGHT_SENSOR_PORT);
+	LEDSignal = new Relay(DIGITAL_MODULE, LED_SIGNAL_RELAY_PORT);
+	LEDSignal2 = new Relay(DIGITAL_MODULE, LED_SIGNAL_RELAY_TWO_PORT);
+	AlignTimer = new Timer();
+	
+	InitiationBool = 0;
+	
+	AutoNextState = AUTO_STATE_MOVE_FORWARD;
+	
+	DrivingRampSwitch = new DigitalInput(SECOND_DIGITAL_MODULE, DRIVING_RAMP_SWITCH);
+
+	AutoTurnTimer = new Timer();
+	
+	DashShare = new DashSharing();
+	dashboardDataFormat = new DashboardDataFormat(DashShare);
+	
+	AutomaticBridgeButtonBool = false;
+
+	//Setup Watchdog
+	GetWatchdog().SetExpiration(10.0);
+	
+}
+
+void Main::TeleopContinuous(void)
+{
+	//Feed Watchdog
+	GetWatchdog().Feed();
+	//test
+
+	//Main while loop of the Telop code
+	while(IsOperatorControl() && !IsDisabled()) 
+	{
+
+		//Feed the watchdog every iteration of this while loop
+		GetWatchdog().Feed();
+
+
+		if(!InitiationBool)
+		{
+
+			VEXTimer->Start();
+			PreviousGyroAngle = VEXGyro->GetAngle();
+			
+
+			InitiationBool = 1;
+			
+			ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_INIT);
+		}
+		
+		CalculatedDistance = (DistanceSensor->GetVoltage() * 102.4);
+		mBuffer.push_back( CalculatedDistance );
+		
+		float filteredDistance = 0.0;
+		// foreach 'old' sample, from oldest to newest (in time)
+		for( boost::circular_buffer< float >::iterator iter = mBuffer.begin(); 
+			 iter != mBuffer.end();
+			 iter++ )
+		{
+			filteredDistance += *iter;
+		}
+		filteredDistance = filteredDistance / mBuffer.size();
+		
+		printf("MaxBotix, %f, Filtered, %f,", CalculatedDistance, filteredDistance);
+		AccelValue = VEXAccel->GetAcceleration();
+		GyroAngle = (VEXGyro->GetAngle());
+		PreviousDistanceFloat = DistanceSensor->GetVoltage();
+		
+		
+//		if(BridgeToggleUpSwitch->Get() == true)
+//		{
+//			//printf("Limit Switch [[UP]]: True");
+//		}
+//		if(BridgeToggleDownSwitch->Get() == true)
+//		{
+//			//printf("Limit Switch [[DOWN]]: True");
+//		}
+		
+		// && BridgeToggleUpSwitch->Get() == false
+		// && BridgeToggleDownSwitch->Get() == false
+		if(DriverGamepad->GetNumberedButton(5) == true)
+		{
+			AutomaticBridgeButtonBool = true;
+		}
+		if(BridgeToggleUpSwitch->Get() == true && DriverGamepad->GetNumberedButton(TOGGLE_DOWN_BUTTON) != true && AutomaticBridgeButtonBool == true)
+		{
+			BridgeToggleMotor->Set(TOGGLE_SPEED_UP);
+			//printf("Toggle Up!?");
+		}
+		else if(DriverGamepad->GetNumberedButton(TOGGLE_DOWN_BUTTON) == true && BridgeToggleDownSwitch->Get() == true)
+		{
+			BridgeToggleMotor->Set(TOGGLE_SPEED_DOWN);
+			AutomaticBridgeButtonBool = true;
+			//printf("Toggle Down?!");
+		}
+		else if(DriverGamepad->GetNumberedButton(6) == true && BridgeToggleDownSwitch->Get() == true)
+		{
+			BridgeToggleMotor->Set(-0.5);
+			AutomaticBridgeButtonBool = false;
+		}
+		else
+		{
+			BridgeToggleMotor->Set(0.0);
+
+		}
+		
+		//LED signal
+
+
+		if(FrontLightSensor->Get() == true)
+		{
+			LEDSignal->Set(Relay::kForward);
+			LEDSignal2->Set(Relay::kForward);
+		}
+		else if((DistanceSensor->GetVoltage() * 102.4) > MINIMUM_BRIDGE_DIST && (DistanceSensor->GetVoltage() * 102.4) < MAXIMUM_BRIDGE_DIST && OperatorGamepad->GetNumberedButton(BUTTON_BRIDGE_DISTANCE))
+		{
+			LEDSignal->Set(Relay::kForward);
+		}
+		else
+		{
+			LEDSignal->Set(Relay::kOff);
+			LEDSignal2->Set(Relay::kOff);
+		} 
+		
+		
+		GetWatchdog().Feed();
+		//Bridge Balance
+		if(GyroAngle > MAX_BALANCING_ANGLE)
+		{
+			GyroAngle = MAX_BALANCING_ANGLE;
+		}
+		else if(GyroAngle < (-1 * MAX_BALANCING_ANGLE))
+		{
+			GyroAngle = (-1 * MAX_BALANCING_ANGLE);
+		}
+		
+		//printf("GyroAngle %f,", GyroAngle);
+		if(DriverGamepad->GetNumberedButton(BUTTON_BALANCE))
+		{
+			VEXDriveProportion = ((GyroAngle / MAX_BALANCING_ANGLE) * BALANCING_SPEED);
+			//VEXDriveProportion = (VEXDriveProportion * VEXDriveProportion * VEXDriveProportion);
+
+			if(VEXDriveProportion  > BALANCING_SPEED)
+			{
+				VEXDriveProportion = BALANCING_SPEED;
+			}
+			else if(VEXDriveProportion < (-BALANCING_SPEED))
+			{
+				VEXDriveProportion = (-BALANCING_SPEED);
+			}
+			//printf("GyroAngle %f, VEXDriveProportion %f, \n", GyroAngle, VEXDriveProportion);
+			if(VEXTimer->Get() < 0.2)
+			{
+
+				if(ProjectedAngle < 10 && ProjectedAngle > -10)
+				{
+					Base->TankDrive(VEXDriveProportion, VEXDriveProportion);
+				}
+				else if(ProjectedAngle > 10)
+				{
+					Base->TankDrive(BALANCING_SPEED, BALANCING_SPEED);
+				}
+				else if(ProjectedAngle < -10)
+				{
+					Base->TankDrive(-BALANCING_SPEED, -BALANCING_SPEED);
+				}
+			}
+			else if(VEXTimer->Get() > 0.4)
+			{
+				VEXTimer->Stop();
+				VEXTimer->Reset();
+				InitiationBool = 0;
+			}
+			else
+			{
+				Base->TankDrive(0.0, 0.0);
+			}
+		}//Light Sensor Align Function
+		else if(false)
+		{
+			Base->TankDrive(-0.65, 0.65);
+		}
+		else if(false)
+		{
+			Base->TankDrive(0.65, -0.65);
+		}
+		else
+		{
+			//if(DrivingRampSwitch->Get() == true)
+			if(true)
+			{
+				LeftJoystickSpeed = (DriverGamepad->GetLeftY());
+				mBufferLeft.push_back( LeftJoystickSpeed );
+				
+				LeftRampedSpeed = 0.0;
+				// foreach 'old' sample, from oldest to newest (in time)
+				for( boost::circular_buffer< float >::iterator iter = mBufferLeft.begin(); 
+					 iter != mBufferLeft.end();
+					 iter++ )
+				{
+					LeftRampedSpeed += *iter;
+				}
+				LeftRampedSpeed = LeftRampedSpeed / mBufferLeft.size();
+				
+				if(LeftJoystickSpeed < 0 && LeftRampedSpeed > 25)
+				{
+					LeftRampedSpeed = 0.0;
+				}
+				
+				RightJoystickSpeed = (DriverGamepad->GetRightY());
+				mBufferRight.push_back( RightJoystickSpeed );
+				
+				RightRampedSpeed = 0.0;
+				// foreach 'old' sample, from oldest to newest (in time)
+				for( boost::circular_buffer< float >::iterator iter = mBufferRight.begin(); 
+					 iter != mBufferRight.end();
+					 iter++ )
+				{
+					RightRampedSpeed += *iter;
+				}
+				RightRampedSpeed = RightRampedSpeed / mBufferRight.size();
+				
+				if(RightJoystickSpeed < 0 && RightRampedSpeed > 25)
+				{
+					RightRampedSpeed = 0.0;
+				}
+
+			}
+			else
+			{
+				LeftRampedSpeed = DriverGamepad->GetLeftY();
+				RightRampedSpeed = DriverGamepad->GetRightY();
+			}
+			
+			printf("LeftSpeed %f, RightSpeed %f,", LeftRampedSpeed, RightRampedSpeed);			
+			if(DriverGamepad->GetRightY() < 0.1 && DriverGamepad->GetRightY() > -0.1)
+			{
+				Base->TankDrive(LeftRampedSpeed, 0.0);
+			}
+			else if(DriverGamepad->GetLeftY() < 0.1 && DriverGamepad->GetLeftY() > -0.1)
+			{
+				Base->TankDrive(0.0, RightRampedSpeed);
+			}
+			else
+			{
+				Base->TankDrive(LeftRampedSpeed, RightRampedSpeed);
+			}
+		}
+
+		if(DriverGamepad->GetNumberedButton(BUTTON_GYRO_RESET))
+		{
+			VEXGyro->Reset();
+			GyroLoopCount = 0;
+			DrivingGyro->Reset();
+		}
+		GyroLoopCount = (GyroLoopCount + 1);
+		printf("GyroAngle %f, VEXDriveProportion %f, HorizontalAngle %f, \n", GyroAngle, VEXDriveProportion, DrivingGyro->GetAngle());
+		ScoringMechanism->StateMachine();
+		
+		DashShare->LightIntake = ScoringMechanism->LightSensorIntake->Get();
+		DashShare->LightConveyor = ScoringMechanism->LightSensorConveyor->Get();
+		DashShare->LightOutput = ScoringMechanism->LightSensorOutput->Get();
+		DashShare->SensedDistance = (filteredDistance);
+		
+		dashboardDataFormat->SendIOPortData();
+		dashboardDataFormat->SendVisionData();
+		
+		GetWatchdog().Feed();
+
+	} //End of while
+
+} //End of Teleop
+
+void Main::AutonomousContinuous(void)
+{
+	GetWatchdog().Feed();
+	ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_DISABLED);
+	AutoNextState = AUTO_STATE_MOVE_FORWARD;
+
+	while(IsAutonomous() && !IsDisabled())
+	{
+		GetWatchdog().Feed();
+		
+		
+		switch(AutoNextState)
+		{
+			case AUTO_STATE_MOVE_FORWARD:
+				printf("AUTO_FORWARD CurrentState = %i, NextState = %i,", AutoCurrentState, AutoNextState);
+				if(AutoCurrentState != AutoNextState)
+				{
+					ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_RELOAD);
+					LeftDriveEncoder->Reset();
+					RightDriveEncoder->Reset();
+				}
+				AutoCurrentState = AUTO_STATE_MOVE_FORWARD;
+
+				//printf("AUTO_STATE_MOVE_FORWARD");
+				
+				if(DriveStraight(WANTED_ENCODER_DISTANCE_1, true))
+				{
+					AutoNextState = AUTO_STATE_SHOOT;
+				}
+				break;
+				
+			case AUTO_STATE_SHOOT:
+				printf("AUTO_SHOOT CurrentState = %i, NextState = %i,", AutoCurrentState, AutoNextState);
+				if(AutoCurrentState != AutoNextState)
+				{
+					ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_AUTO_SHOOT);
+					printf("Next != Current. Yay!");
+				}
+
+				if(FrontLightSensor->Get() == true)
+				{
+					LEDSignal->Set(Relay::kForward);
+					LEDSignal2->Set(Relay::kForward);
+				}
+				else
+				{
+					LEDSignal->Set(Relay::kOff);
+					LEDSignal2->Set(Relay::kOff);
+				} 
+				
+				if(ScoringMechanism->CheckState() == Manipulator::MANIP_STATE_DISABLED && AutoCurrentState == AUTO_STATE_SHOOT)
+				{
+					if(Autonomous1)
+					{
+						if(abs(RightDriveEncoder->GetDistance()) > 1)
+						{
+							Base->TankDrive(-0.5, -0.5);
+						}
+						else
+						{
+							Base->TankDrive(0.0, 0.0);
+							AutoNextState = AUTO_STATE_DISABLED;
+						}
+					}
+					else
+					{
+						AutoNextState = AUTO_STATE_BACK_UP;
+					}
+				}
+				
+				AutoCurrentState = AUTO_STATE_SHOOT;
+
+				break;
+			
+			case AUTO_STATE_BACK_UP:
+				printf("AUTO_BACKUP CurrentState = %i, NextState = %i,", AutoCurrentState, AutoNextState);
+				if(AutoCurrentState != AutoNextState)
+				{
+					ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_DISABLED);
+				}
+				AutoCurrentState = AUTO_STATE_BACK_UP;
+				
+				//if(DriveStraight(WANTED_ENCODER_DISTANCE_2, true))
+				if(TurnAngle(AUTO_TURN_ANGLE))
+				{
+					if(DriveTo(AUTO_BACKUP_DISTANCE))
+					{
+						if(TurnAngle(-AUTO_TURN_ANGLE))
+						{
+							AutoNextState = AUTO_STATE_BRIDGE;
+						}
+					}
+					
+				}
+				break;
+			
+			case AUTO_STATE_TURN:
+				printf("AUTO_TURN CurrentState = %i, NextState = %i,", AutoCurrentState, AutoNextState);
+				if(AutoCurrentState != AutoNextState)
+				{
+					ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_DISABLED);
+
+				}
+				AutoCurrentState = AUTO_STATE_TURN;
+				if(DrivingGyro->GetAngle() < WANTED_TURN_ANGLE)
+				{
+					Base->TankDrive(0.25,-0.25);
+				}
+				else if(DrivingGyro->GetAngle()> WANTED_TURN_ANGLE)
+				{
+					Base->TankDrive(0.0,0.0);
+					AutoNextState = AUTO_STATE_BRIDGE;
+				}
+				break;
+				
+			case AUTO_STATE_BRIDGE:
+				printf("AUTO_BRIDGE CurrentState = %i, NextState = %i,", AutoCurrentState, AutoNextState);
+				if(EncoderAverageDistance < WANTED_ENCODER_DISTANCE_3)
+				{
+					Base->TankDrive(0.75,0.75);
+				}
+				else if(EncoderAverageDistance > WANTED_ENCODER_DISTANCE_3)
+				{
+					Base->TankDrive(0.0,0.0);
+				
+					if(BridgeToggleDownSwitch->Get() == true)
+					{
+						BridgeToggleMotor->Set(0.2);
+					}
+					else if(BridgeToggleDownSwitch->Get() == false)
+					{
+						BridgeToggleMotor->Set(0.0);
+					}
+				}	
+				AutoNextState = AutoCurrentState;
+				//printf("AUTO_STATE_BRIDGE");
+				//EncoderAverageDistance = ((LeftDriveEncoder->GetDistance() + RightDriveEncoder->GetDistance()) / 2);
+				EncoderAverageDistance = LeftDriveEncoder->GetDistance();
+				//EncoderAverageDistance = RightDriveEncoder->GetDistance();
+								
+				break;
+
+			case AUTO_STATE_DISABLED:
+				printf("AUTO_DISABLED CurrentState = %i, NextState = %i,", AutoCurrentState, AutoNextState);
+				//printf("AUTO_STATE_DISABLED \n");
+				break;
+		}
+		
+		ScoringMechanism->StateMachine();
+	}
+
+}
+
+void Main::DisabledContinuous(void)
+{
+	printf("You are in Main::DisabledContinuous\n");
+	ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_DISABLED);
+	
+	/*
+	if(LastAngle != VEXGyro->GetAngle())
+	{
+		CorrectionalValue = ((LastAngle - VEXGyro->GetAngle())/AngleCorrection);
+		AngleCorrection = 0;
+	}
+	else
+	{
+		AngleCorrection++;
+	}
+	LastAngle = VEXGyro->GetAngle();
+	printf("CorrectionalValue: %f", CorrectionalValue);
+	 */
+}
+
+void Main::TeleopPeriodic(void)
+{
+
+}
+void Main::AutonomousPeriodic(void)
+{
+
+}
+void Main::DisabledPeriodic(void)
+{
+
+}
+void Main::RobotInit(void)
+{
+
+	ScoringMechanism->StateMachine();
+	ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_DISABLED);
+	LeftDriveEncoder->Start();
+	RightDriveEncoder->Start();
+
+}
+void Main::DisabledInit(void)
+{
+	//This code will run once every time the robot is brought back into Disabled
+	printf("You are in Main::DisabledInit\n");
+}
+
+void Main::AutonomousInit(void)
+{
+	//This controls autonomous 1 or 2
+	Autonomous1 = true;
+	printf("You are in Main::AutoInit\n");
+	AutoNextState = AUTO_STATE_MOVE_FORWARD;
+	ScoringMechanism->ChangeNextState(Manipulator::MANIP_STATE_DISABLED);
+
+	//Autonomous1 = // add digital toggle switch here  express ?  true: false;
+}
+
+void Main::TeleopInit(void)
+{
+
+	InitiationBool = 0;
+	GyroLoopCount = 0;
+	printf("You are in Main::TeleopInit\n");
+}
+
+bool Main::DriveStraight(float FinalDistance, bool ForwardDirection)
+{
+	//EncoderAverageDistance = ((LeftDriveEncoder->GetDistance() + RightDriveEncoder->GetDistance()) / 2);
+	//EncoderAverageDistance = LeftDriveEncoder->GetDistance();
+	//Timer *DrivingTimer;
+	float DistanceRight = 0;
+	float DistanceLeft = 0;
+	float DistanceTraveled = 1;
+	float DrivePower = 0.75;
+	float LeftOffsetValue = 0;
+	float RightOffsetValue = 0;
+	float Direction = ForwardDirection ? 1: -1;
+	//DrivingTimer->Start();
+	printf("-! DriveStraight(%f, %s),\n", FinalDistance, ForwardDirection ? "True": "False");
+	while(DistanceTraveled < FinalDistance && IsAutonomous() && !IsDisabled())
+	{
+		DistanceLeft = abs(LeftDriveEncoder->GetDistance());
+		DistanceRight = abs(RightDriveEncoder-> GetDistance());
+		DistanceTraveled = ((DistanceRight + DistanceLeft) / 2) + 0.0001;
+		LeftOffsetValue = ((DistanceTraveled - DistanceLeft) / DistanceTraveled);
+		RightOffsetValue = ((DistanceTraveled - DistanceRight) / DistanceTraveled);
+		
+		if(FrontLightSensor->Get() == true)
+		{
+			LEDSignal->Set(Relay::kForward);
+			LEDSignal2->Set(Relay::kForward);
+		}
+		else
+		{
+			LEDSignal->Set(Relay::kOff);
+			LEDSignal2->Set(Relay::kOff);
+		} 
+		
+		if((DistanceTraveled / FinalDistance) > 0.50  && (DistanceTraveled / FinalDistance) < 0.75)
+		{
+			DrivePower = 0.60 * Direction;
+		}
+		else if((DistanceTraveled / FinalDistance) > 0.75)
+		{
+			DrivePower = 0.5 * Direction;
+		}
+		GetWatchdog().Feed();
+		
+		Base->TankDrive((DrivePower + LeftOffsetValue), (DrivePower + RightOffsetValue));
+		//Base->TankDrive((DrivePower), (DrivePower));
+		//printf("LeftD %f, RightD %f, OffL %f, OffR %f,\n", DistanceLeft, DistanceRight, LeftOffsetValue, RightOffsetValue);
+	}
+	Base->TankDrive(0.0,0.0);
+	while(FrontLightSensor->Get() != true && IsAutonomous() && !IsDisabled())
+	{
+		Base->TankDrive(0.2, -0.5);
+		printf("Turning TO Light \n");
+		if(FrontLightSensor->Get() == true)
+		{
+			LEDSignal->Set(Relay::kForward);
+			LEDSignal2->Set(Relay::kForward);
+		}
+		else
+		{
+			LEDSignal->Set(Relay::kOff);
+			LEDSignal2->Set(Relay::kOff);
+		} 
+	}
+	Base->TankDrive(0.0,0.0);
+	//DrivingTimer->Stop();
+	return true;
+}
+
+bool Main::TurnAngle(float Angle)
+{
+	printf("-! TurnAngle");
+	DrivingGyro->Reset();
+	float AngleGyro = 0.0;
+	float RightDriveMotor = 0.0;
+	float LeftDriveMotor = 0.0;
+	
+	if(Angle < 0)
+	{
+		RightDriveMotor = 0.25;
+		LeftDriveMotor = 0.0;
+	}
+	else
+	{
+		LeftDriveMotor = 0.25;
+		RightDriveMotor = 0.0;
+	}
+	
+	if(Angle > 5)
+	{
+		while(abs(Angle) < abs(AngleGyro) && IsAutonomous() && !IsDisabled())
+		{
+			AngleGyro = DrivingGyro->GetAngle();
+			Base->TankDrive(LeftDriveMotor, RightDriveMotor);
+			printf("AngleGyro %f, \n", AngleGyro);
+		}
+	}
+	else
+	{
+		AutoTurnTimer->Start();
+		while(AutoTurnTimer->Get() < abs(Angle)  && IsAutonomous() && !IsDisabled())
+		{
+			Base->TankDrive(LeftDriveMotor, RightDriveMotor);
+			printf("AngleTime %f, \n", AutoTurnTimer->Get());
+		}
+		AutoTurnTimer->Stop();
+		AutoTurnTimer->Reset();
+	}
+	
+	return true;
+}
+bool Main::DriveTo(float Distance2)
+{
+	printf ("-! DriveTo");
+	ActualDistance = (DistanceSensor->GetVoltage() * 102.4);
+	while(ActualDistance > Distance2 && IsAutonomous() && !IsDisabled())
+	{
+		ActualDistance = (DistanceSensor->GetVoltage() * 102.4);
+		Base->TankDrive(0.25, 0.25);
+		printf("ActualDistance %f,", ActualDistance);
+	}
+	return true;
+}
+
+START_ROBOT_CLASS(Main);

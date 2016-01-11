@@ -1,0 +1,399 @@
+#include "WPILib.h"
+#include "Drive.h"
+#include "Gamepad.h"
+#include "Shooter.h"
+#include "Intake.h"
+#include "Buttons.h"
+
+#define IN_INTAKE_MANUAL_MODE true
+#define IN_INTAKE_AUTO_MODE false
+
+#define AUTO_DRIVE_DISTANCE_RIGHT 164 //inches
+#define AUTO_DRIVE_DISTANCE_LEFT 164 //inches
+#define AUTO_DRIVE_SPEED .3          //IF THIS IS CHANGED, YOU MUST ALSO CHANGE MAX_CORRECTION IN DRIVE.H
+
+#define AUTO_STOPPING_SPEED_RIGHT -0.1
+#define AUTO_STOPPING_SPEED_LEFT -0.1
+
+#define AUTO_STOPPED_SPEED_RIGHT 0.0
+#define AUTO_STOPPED_SPEED_LEFT 0.0
+
+//#define HOT_AUTO_SENSOR_CHANNEL 9
+
+typedef enum {
+	AUTO_NULL,
+	AUTO_INIT = 0,
+	AUTO_EXTEND = 1,
+	AUTO_DRIVE = 2,
+	AUTO_STOP_DRIVING = 10,
+	AUTO_SHOOT = 3,
+	AUTO_MOBILITY = 4,
+	AUTO_STOP = 5
+} AutoState;
+
+/**
+ * This is a demo program showing the use of the RobotBase class.
+ * The IterativeRobot class is the base of a robot application that will automatically call your
+ * Periodic methods for each packet based on the mode.
+ */ 
+class RobotDemo : public IterativeRobot
+{
+private:
+	//RobotDrive myRobot; // robot drive system
+	Drive *drive;
+	
+	Shooter *shooter;
+	
+	Intake *intake;
+	
+	Gamepad *driverPad;
+	Gamepad *operatorPad;
+	
+	bool intakeMode;
+	bool intakeCont;
+	
+	Gamepad::DPadDirection curPadDir;
+	Gamepad::DPadDirection lastPadDir;
+	
+	AutoState preAutoState, curAutoState;
+	
+//	Timer *HotAutoTimer;
+//	DigitalInput *HotAutoSensor;
+//	bool HotAutoStarts;
+	
+public:
+	RobotDemo()
+		//myRobot(1, 2),	// these must be initialized in the same order
+		//stick(1)		// as they are declared above.
+	{
+		//myRobot.SetExpiration(0.1);
+		this->SetPeriod(0); 	//Set update period to sync with robot control packets (20ms nominal)
+		this->drive = new Drive();
+		this->driverPad = new Gamepad(1);
+		this->operatorPad = new Gamepad(2);	
+		
+		this->shooter = new Shooter();
+		this->intake = new Intake();
+		
+		intake->setShooter(shooter);
+		shooter->setIntake(intake);
+		
+		intakeMode = IN_INTAKE_MANUAL_MODE;
+		intakeCont = false;
+	
+		curPadDir = Gamepad::kCenter;
+		lastPadDir = Gamepad::kCenter;
+		
+//		this->HotAutoTimer  = new Timer;
+//		this->HotAutoSensor = new DigitalInput(HOT_AUTO_SENSOR_CHANNEL);
+		
+	}
+	
+/**
+ * Robot-wide initialization code should go here.
+ * 
+ * Use this method for default Robot-wide initialization which will
+ * be called when the robot is first powered on.  It will be called exactly 1 time.
+ */
+void RobotDemo::RobotInit() {
+}
+
+/**
+ * Initialization code for disabled mode should go here.
+ * 
+ * Use this method for initialization code which will be called each time
+ * the robot enters disabled mode. 
+ */
+void RobotDemo::DisabledInit() {
+}
+
+/**
+ * Periodic code for disabled mode should go here.
+ * 
+ * Use this method for code which will be called periodically at a regular
+ * rate while the robot is in disabled mode.
+ */
+void RobotDemo::DisabledPeriodic() {
+}
+
+/**
+ * Initialization code for autonomous mode should go here.
+ * 
+ * Use this method for initialization code which will be called each time
+ * the robot enters autonomous mode.
+ */
+void RobotDemo::AutonomousInit() {
+	preAutoState = AUTO_INIT;
+	curAutoState = AUTO_EXTEND;
+	
+//	HotAutoTimer->Reset();
+//	HotAutoTimer->Start();
+//	HotAutoStarts = false;
+
+	//drive->InitAutoDrive(12.0, 12.0, 0.5);
+	//sleep(1);
+	//drive->TeleopDrive(-0.5,-0.5);	
+}
+
+/**
+ * Periodic code for autonomous mode should go here.
+ *
+ * Use this method for code which will be called periodically at a regular
+ * rate while the robot is in autonomous mode.
+ */
+void RobotDemo::AutonomousPeriodic() 
+{
+	shooter->handle();
+	intake->handle();
+	
+	switch(curAutoState)
+	{
+	case AUTO_EXTEND:
+		if(curAutoState != preAutoState)
+		{			
+			preAutoState = curAutoState;
+			
+			intake->move(INTAKE_EXTEND_POWER);
+			printf("extending, pre %d, cur %d, \n", preAutoState, curAutoState);
+		}
+		
+		if(intake->getCurrentPosition() >= EXTENDER_MAX_DISTANCE)
+		{
+			intake->move(STOP);
+			curAutoState = AUTO_DRIVE;
+			printf("pre %d, cur %d, stopped extender \n", preAutoState, curAutoState);
+		}
+		break;
+	
+	case AUTO_DRIVE:
+		if(curAutoState != preAutoState)
+		{
+			preAutoState = curAutoState;
+			
+			drive->InitAutoDrive(AUTO_DRIVE_DISTANCE_RIGHT, 
+					AUTO_DRIVE_DISTANCE_LEFT, 
+					AUTO_DRIVE_SPEED);
+			printf("We're moving! pre %d, cur %d, \n", preAutoState, curAutoState);
+		}
+/*		if(HotAutoSensor->Get())
+		{
+			HotAutoStarts = true;
+		}
+*/		
+		if(drive->autoDrive() == true)
+		{
+			curAutoState = AUTO_STOP_DRIVING;
+		}
+		break;
+		
+	case AUTO_STOP_DRIVING:
+		if(curAutoState != preAutoState)
+		{
+			preAutoState = curAutoState;
+			printf("now stopping pre %d, cur %d, \n", preAutoState, curAutoState);
+			
+			drive->TeleopDrive(AUTO_STOPPING_SPEED_LEFT, AUTO_STOPPING_SPEED_RIGHT);
+		}
+		
+		if(drive->getSpeed() > 0.01)
+		{
+			drive->TeleopDrive(AUTO_STOPPED_SPEED_LEFT, AUTO_STOPPED_SPEED_RIGHT);
+//			if(HotAutoStarts || HotAutoTimer->Get() > 5.0)
+//			{
+			curAutoState = AUTO_SHOOT;
+//			}
+		}
+		break;
+		
+	case AUTO_SHOOT:
+		if(curAutoState != preAutoState)
+		{
+			preAutoState = curAutoState;
+			
+			printf("now shooting pre %d, cur %d, \n", preAutoState, curAutoState);
+			shooter->initShot(SHOT_HIGH_ANGLE, SHOT_HIGH_SPEED);
+		}
+		
+		if(!shooter->isShooting())
+		{
+			curAutoState = AUTO_STOP;
+		}
+		break;
+/*		
+	case AUTO_MOBILITY:
+		if(curAutoState != preAutoState)
+		{
+			drive->InitAutoDrive(AUTO_SETUP_SHOT_DISTANCE_RIGHT, 
+					AUTO_SETUP_SHOT_DISTANCE_LEFT, 
+					AUTO_SETUP_SHOT_SPEED);
+		}
+		
+		if(drive->autoDrive())
+		{
+			curAutoState = AUTO_STOP;
+		}
+		break;
+*/		
+	case AUTO_STOP:
+		preAutoState = curAutoState;
+		printf("auto is done pre %d, cur %d, \n", preAutoState, curAutoState);
+		break;
+//		HotAutoTimer->Stop();
+		
+	default:
+		break;
+	}
+	
+	
+}
+
+/**
+ * Initialization code for teleop mode should go here.
+ * 
+ * Use this method for initialization code which will be called each time
+ * the robot enters teleop mode.
+ */
+void RobotDemo::TeleopInit() {
+//	HotAutoTimer->Stop();
+//	HotAutoTimer->~Timer();
+}
+
+/**
+ * Periodic code for teleop mode should go here.
+ *
+ * Use this method for code which will be called periodically at a regular
+ * rate while the robot is in teleop mode.
+ */
+void RobotDemo::TeleopPeriodic()
+{
+	drive->TeleopDrive(driverPad->GetLeftY() *DRIVER_LEFT_DIRECTION, driverPad->GetRightY() *DRIVER_RIGHT_DIRECTION);
+	shooter->handle();
+	shooter->debug();
+	
+	//shooter->setShooterPower(operatorPad->GetRightY());
+	
+	if((intakeMode == IN_INTAKE_MANUAL_MODE) && operatorPad->GetNumberedButton(INTAKE_AUTO_MODE_BUTTON))
+	{
+		intakeMode = IN_INTAKE_AUTO_MODE;
+		printf ("set into auto roller mode");
+		intake->setExtenderMode(IN_INTAKE_AUTO_MODE);
+	}
+	//sets intake mode to auto if previously in manual and operator presses auto button
+	else if((intakeMode == IN_INTAKE_AUTO_MODE) && operatorPad->GetNumberedButton(INTAKE_MANUAL_MODE_BUTTON))
+	{
+		intakeMode = IN_INTAKE_MANUAL_MODE;
+		printf ("set into manual roller mode");
+		intake->setExtenderMode(IN_INTAKE_MANUAL_MODE);
+	}
+	
+	intake->handle();
+	
+	if(intakeMode == IN_INTAKE_MANUAL_MODE)
+	{
+		intake->move(operatorPad->GetLeftY()*OPERATOR_LEFT_DIRECTION);
+	}
+	else
+	{
+		//Extender DPad control
+		curPadDir = operatorPad->GetDPad();
+		
+		if(lastPadDir != curPadDir)
+		{
+			switch(curPadDir)
+			{
+			case Gamepad::kUp:
+				intake->setExtenderTarget(FULL_EXTEND_DISTANCE);
+				break;
+			case Gamepad::kDown:
+				intake->setExtenderTarget(FULL_RETRACT_DISTANCE);
+				break;
+			default:
+				break;
+			}
+		}
+		
+		lastPadDir = curPadDir;
+	}
+	
+	//intake->spinRoller(operatorPad->GetRightY()*OPERATOR_RIGHT_DIRECTION);
+	intake->getCurrentPosition();
+	
+	
+	//if operator taps in button roller continually spins inward
+	if(operatorPad->GetNumberedButton(ROLLER_IN_BUTTON))
+	{
+		intakeCont = INTAKE_ROLLER_IN_STATE;
+	}
+	//if operator taps stop button roller stops continually
+	else if(operatorPad->GetNumberedButton(ROLLER_OFF_BUTTON))
+	{
+		intakeCont = INTAKE_ROLLER_STOP_STATE;
+	}
+	
+	//if operator holds spit button roller spins backwards no matter what
+	if(operatorPad->GetNumberedButton(ROLLER_OUT_BUTTON))
+	{
+		intake->spinRoller(INTAKE_ROLLER_SPIT_POWER);
+	}
+	//not holding spit button
+	else
+	{
+		//roller either spins or is stopped depending on previous code
+		if(intakeCont)
+		{
+			intake->spinRoller(INTAKE_ROLLER_IN_POWER);
+		}
+		else
+		{
+			intake->spinRoller(INTAKE_ROLLER_STOP_POWER);
+		}
+	}
+		
+
+	
+	if(operatorPad->GetNumberedButton(RIGHT_TRIGGER_BUTTON)) // low shot = Right Trigger
+	{
+		shooter->initShot(SHOT_LOW_ANGLE, SHOT_LOW_SPEED);
+		printf("test button 1 is pressed");
+	}
+	else if(operatorPad->GetNumberedButton(LEFT_TRIGGER_BUTTON)) // pass = Left Trigger
+	{
+		shooter->initShot(SHOT_PASS_ANGLE, SHOT_PASS_SPEED);
+		printf("test button 2 is pressed");
+	}
+	else if(operatorPad->GetNumberedButton(RIGHT_BUMPER_BUTTON)) // high shot = Right Bumper
+	{
+		shooter->initShot(SHOT_HIGH_ANGLE, SHOT_HIGH_SPEED);
+		printf("test button 3 is pressed");
+	}
+	else if(operatorPad->GetNumberedButton(LEFT_BUMPER_BUTTON)) // truss = Left Bumper
+	{
+		shooter->initShot(SHOT_TRUSS_ANGLE, SHOT_TRUSS_SPEED);
+		printf("test button 4 is pressed");
+	}	
+		
+		//printf("right Joystick distance: %f  left Joystick distance: %f \n", driverPad->GetRightY(), driverPad->GetLeftY());
+}
+
+/**
+ * Initialization code for test mode should go here.
+ * 
+ * Use this method for initialization code which will be called each time
+ * the robot enters test mode.
+ */
+void RobotDemo::TestInit() {
+}
+
+/**
+ * Periodic code for test mode should go here.
+ *
+ * Use this method for code which will be called periodically at a regular
+ * rate while the robot is in test mode.
+ */
+void RobotDemo::TestPeriodic() {
+}
+
+};
+
+START_ROBOT_CLASS(RobotDemo);
+

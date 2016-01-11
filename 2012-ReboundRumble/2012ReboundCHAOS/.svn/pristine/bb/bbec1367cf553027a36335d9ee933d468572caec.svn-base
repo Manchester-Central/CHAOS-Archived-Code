@@ -1,0 +1,147 @@
+/*
+**-----------------------------------------------**
+**                                                             
+**   Filename: Main.h                                        
+**                                                             
+**   About:    The Main ReboundRumble Robot Class
+**                                                             
+**   Property of Chaos, Copyright 2011
+**   Written by: Josh Allard
+**               Ben Papp
+**               Zain Abbas           
+**               Eric Moy, Chaos.                                                                            
+**   2012 1 12             
+**                                                             
+**-------------------------------------------------------------*/
+
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+
+
+#include "WPILib.h"
+#include "Refs.h"
+#include "Gamepad.h"
+#include "Accelerometer.h"
+#include "Manipulator.h"
+#define NDEBUG
+#include "boost/circular_buffer.hpp"
+
+
+class Main : public IterativeRobot
+{
+public:
+	
+	//Function Prototypes
+	Main(void);
+	
+	virtual void TeleopContinuous(void);
+	virtual void AutonomousContinuous(void);
+	virtual void DisabledContinuous(void);
+	
+	virtual void TeleopPeriodic(void);
+	virtual void AutonomousPeriodic(void);	
+	virtual void DisabledPeriodic(void);
+	
+	virtual void RobotInit(void);
+	virtual void DisabledInit(void);
+	virtual void AutonomousInit(void);
+	virtual void TeleopInit(void);
+	
+private:
+	boost::circular_buffer<float> mBuffer;
+	boost::circular_buffer<float> mBufferLeft;
+	boost::circular_buffer<float> mBufferRight;
+public:
+	
+	float RightJoystickSpeed;
+	float LeftJoystickSpeed;
+	float RightRampedSpeed;
+	float LeftRampedSpeed;
+	
+	RobotDrive *VEXBase;
+	Victor *VEXArm;
+	Victor *VEXMotor;
+	Victor *VEXConveyor;
+	int AngleCorrection;
+	float LastAngle;
+	float CorrectionalValue;
+	double GyroLoopCount;
+	Timer *VEXTimer;
+	bool InitiationBool;
+	
+	Gyro *VEXGyro; 
+	Gyro *DrivingGyro;
+	Accelerometer *VEXAccel;
+	float GyroAngle;
+	float VEXDriveProportion;
+	float GyroHold;
+	float AccelValue;
+	AnalogChannel *AnaChan;
+	float AccelVoltage;
+	float AccelAngle;
+	float PreviousGyroAngle;
+	float DeltaAngle;
+	float ProjectedAngle;
+	//Gamepads
+	Gamepad *DriverGamepad;
+	Gamepad *OperatorGamepad;
+	
+	RobotDrive *Base;
+	Encoder *LeftDriveEncoder;
+	Encoder *RightDriveEncoder;
+	
+	double EncoderAverageDistance;
+	float WantedSpeedTop;
+	float WantedSpeedBottom;
+	double ActualSpeedTop;
+	double ActualSpeedBottom;
+	
+	// sensor testing
+	DigitalInput *LimitSwitch;
+	DigitalInput *LightSensor;
+	AnalogChannel *DistanceSensor;
+	bool PreviousLightBool;
+	float BallValue;
+	float PreviousDistanceFloat;
+	float TestVariable;
+	float CalculatedDistance;
+	
+	//Manipulator
+	Manipulator *ScoringMechanism;
+	
+	//BridgeToggle
+	Victor *BridgeToggleMotor;
+	DigitalInput *BridgeToggleUpSwitch;
+	DigitalInput *BridgeToggleDownSwitch;
+	
+	//Light Alignment
+	DigitalInput *FrontLightSensor;
+	Relay *LEDSignal;
+	Relay *LEDSignal2;
+	Timer *AlignTimer;
+	
+	//Autonomous
+	typedef enum 
+	{
+		AUTO_STATE_DISABLED = 0,
+		AUTO_STATE_MOVE_FORWARD = 1,
+		AUTO_STATE_SHOOT = 2,
+		AUTO_STATE_BACK_UP = 3,
+		AUTO_STATE_TURN = 4,
+		AUTO_STATE_BRIDGE = 5
+	}AUTO_STATES_T;
+	
+	AUTO_STATES_T AutoNextState;
+	AUTO_STATES_T AutoCurrentState;
+	
+	bool Autonomous1;
+	bool DriveStraight(float FinalDistance, bool ForwardDirection);
+	bool TurnAngle(float Angle);
+	bool DriveTo(float Distance2);
+	DigitalInput *DrivingRampSwitch;
+	
+};
+
+#endif

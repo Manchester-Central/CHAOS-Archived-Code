@@ -1,0 +1,49 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Intake.cpp                                       
+ **                                                             
+ **   About:    
+ **                                                                
+ **   Property of Chaos, Copyright 2014
+ **   Written by:  
+ **              Ben Papp
+ **              Eric Moy
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+#include "Intake.h"
+
+Intake::Intake()
+{
+	extenderPot = new AnalogChannel(INTAKE_POT_CHANNEL);
+	extenderTalon = new Talon(INTAKE_EXTENDER_PORT);
+	rollerVictor = new Victor(INTAKE_ROLLER_PORT);
+	
+	targetPosition = 0.0;
+	extenderPower = 0.0;
+	rollerPower = 0.0;
+	
+}
+
+void move(double power)
+{
+	
+}
+
+void spinRoller(double power)
+{
+	
+}
+
+void handle(void)
+{
+	
+}
+
+double getCurrentPosition(void) //in inches, 0 when fully retracted
+{
+	
+}

@@ -1,0 +1,256 @@
+/*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Manipulator.cpp                                        
+ **                                                             
+ **   About:    The ReboundRumble Robot Class Manipulator
+ **                                                             
+ **   Property of Chaos, Copyright 2012
+ **   Written by:  
+ **               Josh Allard
+ **               Ben Papp
+ **               Zain Abbas
+ **				  Eric Moy, Chaos.           
+ **                                                                                           
+ **   2012 1 28             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+#include "Manipulator.h"
+
+Manipulator::Manipulator(Gamepad *OperatorGamepad)
+{
+	this->OperatorGamepad = OperatorGamepad;
+	
+	LightSensorIntake = new DigitalInput(DIGITAL_MODULE, LIGHT_SENSOR_INTAKE_PORT);
+	LightSensorConveyor = new DigitalInput(DIGITAL_MODULE, LIGHT_SENSOR_CONVEYOR_PORT);
+	LightSensorOutput = new DigitalInput(DIGITAL_MODULE, LIGHT_SENSOR_OUTPUT_PORT);
+	NextState = MANIP_STATE_DISABLED;
+	
+	ConveyorMotor = new Victor(DIGITAL_MODULE, CONVEYOR_MOTOR_PORT);
+	IntakeMotor = new Victor(DIGITAL_MODULE, INTAKE_MOTOR_PORT);
+	TopShooterMotor = new Victor(DIGITAL_MODULE, TOP_SHOOTER_MOTOR_PORT);
+	//BottomShooterMotor = new Victor(DIGITAL_MODULE, BOTTOM_SHOOTER_MOTOR_PORT);
+	TopShooterEncoder = new Encoder(TOP_SHOOTER_ENCODER_PORT_1, TOP_SHOOTER_ENCODER_PORT_2);
+	//BottomShooterEncoder = new Encoder(BOTTOM_SHOOTER_ENCODER_PORT_1, BOTTOM_SHOOTER_ENCODER_PORT_2);
+	
+	ProportionalConstant = PROP_CONST;
+	IntervalConstant = INT_CONST;
+	DerivativeConstant = DER_CONST;
+	
+	TopShooterMotorControl = new PIDController(ProportionalConstant, IntervalConstant, DerivativeConstant, TopShooterEncoder, TopShooterMotor);
+	//BottomShooterMotorControl = new PIDController(ProportionalConstant, IntervalConstant, DerivativeConstant, BottomShooterEncoder, BottomShooterMotor);
+	TopShooterMotorControl->SetInputRange(MAX_ENCODER_VALUE, MIN_ENCODER_VALUE);
+	TopShooterMotorControl->SetOutputRange(MAX_SHOOTER_OUTPUT, MIN_SHOOTER_OUTPUT);
+	
+	TopShooterMotorControl->Disable();
+	//BottomShooterMotorControl->Disable();
+	
+	
+	BallCount = 0;
+	CurrentState = MANIP_STATE_DISABLED;
+	
+}
+
+void Manipulator::StateMachine(void)
+{
+
+	if(LightSensorIntake->Get() == true && PreviousLightIntakeBool == false)
+	{
+		BallCount = (BallCount + 1);
+	}
+	PreviousLightIntakeBool = LightSensorIntake->Get();
+	
+	if(LightSensorOutput->Get() == true && PreviousLightOutputBool == false)
+	{
+		BallCount = (BallCount - 1);
+	}
+	PreviousLightOutputBool = LightSensorOutput->Get();
+	
+	if(OperatorGamepad->GetNumberedButton(BALL_RESET_BUTTON))
+	{
+		BallCount = 0;
+	}
+	
+
+	printf("BallCount %f, \n", BallCount);
+	
+	if(OperatorGamepad->GetNumberedButton(BUTTON_MANUAL))
+	{
+		NextState = MANIP_STATE_MANUAL;
+	}
+
+
+	switch(NextState)
+	{
+		case MANIP_STATE_DISABLED:
+			CurrentState = MANIP_STATE_DISABLED;
+			NextState = MANIP_STATE_DISABLED;
+			TopShooterMotorControl->Disable();
+			printf("State Disabled");
+			break;
+			
+		case MANIP_STATE_INIT:
+			BallCount = 0;
+			CurrentState = MANIP_STATE_INIT;
+			NextState = MANIP_STATE_RELOAD;
+			TopShooterMotorControl->Disable();
+			printf("State Init");
+			break;
+			
+		case MANIP_STATE_RELOAD:
+			CurrentState = MANIP_STATE_RELOAD;
+
+			TopShooterMotorControl->Disable();
+			
+			if(LightSensorOutput->Get() != true)
+			{
+				if(LightSensorIntake->Get() != true && LightSensorConveyor->Get() != true)
+				{
+					ConveyorMotor->Set(0.0);
+				}
+				else if(LightSensorIntake->Get() == true || LightSensorConveyor->Get() == true)
+				{
+					ConveyorMotor->Set(CONVEYOR_MOTOR_POWER);
+				}
+			}
+			else
+			{
+				ConveyorMotor->Set(0.0);
+			}
+			
+			if(OperatorGamepad->GetNumberedButton(BUTTON_SHOOT) != true)
+			{
+				if(OperatorGamepad->GetNumberedButton(BUTTON_INTAKE) == true)
+				{
+					IntakeMotor->Set(INTAKE_MOTOR_INTAKE);
+				}
+				else if(OperatorGamepad->GetNumberedButton(BUTTON_OUTPUT) == true)
+				{
+					IntakeMotor->Set(INTAKE_MOTOR_OUTPUT);
+				}
+				else
+				{
+					IntakeMotor->Set(0.0);
+				}
+				
+			}
+			else if(OperatorGamepad->GetNumberedButton(BUTTON_SHOOT) == true)
+			{
+				NextState = MANIP_STATE_SHOOT;
+			}
+			printf("State Reload");
+			break;
+			
+		case MANIP_STATE_SHOOT:
+			CurrentState = MANIP_STATE_SHOOT;
+			if(CurrentState != NextState)
+			{
+				//something
+			}
+			CurrentState = MANIP_STATE_SHOOT;
+
+			TopShooterMotorControl->SetSetpoint(SHOOT_SPEED);
+			TopShooterMotorControl->Enable();
+			
+			if(TopShooterEncoder->GetRate() < (SHOOT_SPEED + SHOOT_SPEED_HYSTERESIS) && TopShooterEncoder->GetRate() > (SHOOT_SPEED - SHOOT_SPEED_HYSTERESIS))
+			{
+				ConveyorMotor->Set(0.50);
+			}
+			
+			if(OperatorGamepad->GetNumberedButton(BUTTON_SHOOT) == true)				
+			{
+				NextState = MANIP_STATE_SHOOT;
+			}
+			else
+			{
+				//turn off motor
+				NextState = MANIP_STATE_RELOAD;
+			}
+			
+			printf("State Shoot");
+			break;
+			
+		case MANIP_STATE_AUTO_SHOOT:
+			if(NextState != CurrentState)
+			{
+				BallCount = (BallCount + 2);
+			}
+			CurrentState = MANIP_STATE_AUTO_SHOOT;
+			
+			TopShooterMotorControl->SetSetpoint(SHOOT_SPEED);
+			TopShooterMotorControl->Enable();
+			if(TopShooterEncoder->GetRate() < (SHOOT_SPEED + SHOOT_SPEED_HYSTERESIS) && TopShooterEncoder->GetRate() > (SHOOT_SPEED - SHOOT_SPEED_HYSTERESIS))
+			{
+				ConveyorMotor->Set(0.50);
+			}
+
+			
+			if(BallCount == 0)
+			{
+				NextState = MANIP_STATE_DISABLED;
+			}
+			break;
+			
+		case MANIP_STATE_MANUAL:
+			if(CurrentState != NextState)
+			{
+				TopShooterMotorControl->Disable();	
+			}
+
+			if(OperatorGamepad->GetNumberedButton(BUTTON_INTAKE) == true)
+			{
+				IntakeMotor->Set(INTAKE_MOTOR_INTAKE);
+			}
+			else if(OperatorGamepad->GetNumberedButton(BUTTON_OUTPUT) == true)
+			{
+				IntakeMotor->Set(INTAKE_MOTOR_OUTPUT);
+			}
+			else
+			{
+				IntakeMotor->Set(0.0);
+			}
+			
+			
+			if(OperatorGamepad->GetRightY() < 0.1 && OperatorGamepad->GetRightY() > -0.1)
+			{
+				TopShooterMotor->Set(0.0);
+			}
+			else
+			{
+				TopShooterMotor->Set(OperatorGamepad->GetRightY());
+			}
+			
+			if(OperatorGamepad->GetLeftY() < 0.1 && OperatorGamepad->GetLeftY() > -0.1)
+			{
+				ConveyorMotor->Set(0.0);
+			}
+			else
+			{
+				ConveyorMotor->Set(OperatorGamepad->GetLeftY());
+			}			
+			
+			if(OperatorGamepad->GetNumberedButton(BUTTON_SHOOT))
+			{
+				NextState = MANIP_STATE_MANUAL;
+			}
+			else
+			{
+				NextState = MANIP_STATE_DISABLED;
+			}
+
+			CurrentState = MANIP_STATE_MANUAL;
+			printf("State Manual");
+			break;
+	}//end switch
+	
+}
+
+void Manipulator::ChangeNextState(Manipulator::MANIP_STATES_X NextState)
+{
+	this->NextState = NextState;
+}
+
+Manipulator::MANIP_STATES_X Manipulator::CheckState(void)
+{
+	return this->CurrentState;
+}

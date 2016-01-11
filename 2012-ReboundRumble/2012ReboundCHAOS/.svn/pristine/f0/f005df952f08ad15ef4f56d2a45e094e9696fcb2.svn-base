@@ -1,0 +1,20 @@
+#ifndef BUTTONS_H_
+#define BUTTONS_H_
+
+#define DRIVER_GAMEPAD_PORT 1
+
+#define BUTTON_BALANCE 2
+#define BUTTON_GYRO_RESET 4
+
+
+
+#define OPERATOR_GAMEPAD_PORT 2
+#define BUTTON_SHOOT 8
+#define BALL_RESET_BUTTON 4
+
+#define TOGGLE_UP_BUTTON 6
+#define TOGGLE_DOWN_BUTTON 8
+
+#define BUTTON_INTAKE 2
+#define BUTTON_MANUAL 7
+#endif 

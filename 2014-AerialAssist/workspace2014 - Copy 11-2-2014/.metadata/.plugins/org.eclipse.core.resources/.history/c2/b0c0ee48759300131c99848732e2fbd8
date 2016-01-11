@@ -1,0 +1,65 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Shooter.h                                      
+ **                    
+ **   2014 1 13             
+ **-------------------------------------------------------------*/
+
+#ifndef SHOOTER_H_
+#define SHOOTER_H_
+
+#include "HardwareIO.h"
+#include "WPILib.h"
+#include "Constants.h"
+#include <math.h>
+
+//Shooter talons
+#define SHOOTER_TALON_PORT_A 1
+#define SHOOTER_TALON_PORT_B 2
+#define SHOOTER_TALON_PORT_C 10
+#define SHOOTER_DIRECTION 1.0 //positive = shoot, negative = retract
+
+//Shooter Encoders
+#define SHOOTER_ENCODER_CHANNEL_A 1
+#define SHOOTER_ENCODER_CHANNEL_B 2
+#define SHOOTER_ENCODER_DIRECTION true
+#define SHOOTER_DEGREES_PER_COUNT 0.96 //(revolution/250counts)*(2/3) to inches/counts
+
+#define RETRACTED_ANGLE 1.0
+
+//Digital Light Sensors
+#define SHOOTER_LIGHT_SENSOR_PORT 6
+
+#define SHOOTER_RESET_SPEED -0.3
+
+
+class Shooter
+{
+public:
+	Shooter(void);
+	//Function prototypes
+	void initShot(double shotAngle, double speed);
+	void shoot(void);
+	bool isReset(void);
+	
+private:
+	
+	
+	Talon *shooterTalonA;
+	Talon *shooterTalonB;
+	Talon *shooterTalonC;
+	DigitalInput *shooterResetSensor;
+	
+	Encoder *shooterEncoder;
+	
+	
+	float power;
+	float angle; 
+	bool shootEnable;
+	bool calibrated;
+
+	void setShooterPower(double power);
+};
+
+#endif 
+

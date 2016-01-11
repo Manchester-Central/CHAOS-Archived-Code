@@ -1,0 +1,141 @@
+!SESSION 2014-10-27 19:11:54.801 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+This is a continuation of log file C:\Users\CHAOS131\Documents\Build14\workspace2014\.metadata\.bak_0.log
+Created Time: 2014-10-27 19:12:00.097
+!SESSION 2014-10-27 19:11:54.801 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY com.windriver.ide.common.core 4 0 2014-10-27 19:12:00.118
+!MESSAGE [Activities] Missing activity handler extension. Activity support is disabled, all packages are permanently enabled!
+
+!ENTRY com.windriver.ide 1 0 2014-10-27 19:12:13.641
+!MESSAGE Workbench start-up time: 18.85s, Main window shown after: 18.05s.
+
+!ENTRY com.windriver.ide.common.core 1 0 2014-10-27 19:12:14.956
+!MESSAGE Workbench license obtained in 0.16s, vendor information: <ln>78202</ln><flt>1</flt><ps>1851-1</ps>
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:12:27.219
+!MESSAGE C:\WindRiver\workbench-3.3\foundation\x86-win32\bin\wtxregd.exe
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:12:29.770
+!MESSAGE C:\WindRiver\workbench-3.3\dfw\\x86-win32\bin\dfwserver.exe  -protocol mi -io sockets -useregistry -session dfw-wb331-CHAOS131 -registryhost 127.0.0.1
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:12:31.282
+!MESSAGE Connected to Wind River debug server backend at 127.0.0.1, 127.0.0.1:49363, PID=5596, Session="dfw-wb331-CHAOS131"
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:12:32.044
+!MESSAGE Wind River Debug Server API Version '2.12.0' (build name 'DFW_BUILD_3_3_1_21 - 06/23/2011 12:29:11')
+!SESSION 2014-10-27 19:27:26.943 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -data C:\Users\CHAOS131\Documents\Build14\workspace2014 -os win32 -ws win32 -arch x86
+
+!ENTRY com.windriver.ide.common.core 1 0 2014-10-27 19:27:31.864
+!MESSAGE Workbench license obtained in 0.03s, vendor information: <ln>78202</ln><flt>1</flt><ps>1851-1</ps>
+
+!ENTRY com.windriver.ide 1 0 2014-10-27 19:27:31.886
+!MESSAGE Workbench start-up time: 4.97s, Main window shown after: 4.46s.
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:27:31.910
+!MESSAGE C:\WindRiver\workbench-3.3\dfw\\x86-win32\bin\dfwserver.exe  -protocol mi -io sockets -useregistry -session dfw-wb331-CHAOS131 -registryhost 127.0.0.1
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:27:32.080
+!MESSAGE Connected to Wind River debug server backend at 127.0.0.1, 127.0.0.1:49773, PID=2764, Session="dfw-wb331-CHAOS131"
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:27:32.432
+!MESSAGE Wind River Debug Server API Version '2.12.0' (build name 'DFW_BUILD_3_3_1_21 - 06/23/2011 12:29:11')
+!SESSION 2014-10-27 19:52:36.784 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -data C:\Users\CHAOS131\Documents\Build14\workspace2014 -os win32 -ws win32 -arch x86
+
+!ENTRY com.windriver.ide.common.core 1 0 2014-10-27 19:52:41.774
+!MESSAGE Workbench license obtained in 0.03s, vendor information: <ln>78202</ln><flt>1</flt><ps>1851-1</ps>
+
+!ENTRY com.windriver.ide 1 0 2014-10-27 19:52:41.799
+!MESSAGE Workbench start-up time: 5.04s, Main window shown after: 4.52s.
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:52:42.047
+!MESSAGE C:\WindRiver\workbench-3.3\dfw\\x86-win32\bin\dfwserver.exe  -protocol mi -io sockets -useregistry -session dfw-wb331-CHAOS131 -registryhost 127.0.0.1
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:52:42.229
+!MESSAGE Connected to Wind River debug server backend at 127.0.0.1, 127.0.0.1:50400, PID=5404, Session="dfw-wb331-CHAOS131"
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:52:42.350
+!MESSAGE Wind River Debug Server API Version '2.12.0' (build name 'DFW_BUILD_3_3_1_21 - 06/23/2011 12:29:11')
+!SESSION 2014-10-27 19:53:40.763 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -data C:\Users\CHAOS131\Documents\Build14\workspace2014 -os win32 -ws win32 -arch x86
+
+!ENTRY com.windriver.ide.common.core 1 0 2014-10-27 19:53:45.827
+!MESSAGE Workbench license obtained in 0.03s, vendor information: <ln>78202</ln><flt>1</flt><ps>1851-1</ps>
+
+!ENTRY com.windriver.ide 1 0 2014-10-27 19:53:45.857
+!MESSAGE Workbench start-up time: 5.12s, Main window shown after: 4.56s.
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:53:45.879
+!MESSAGE C:\WindRiver\workbench-3.3\dfw\\x86-win32\bin\dfwserver.exe  -protocol mi -io sockets -useregistry -session dfw-wb331-CHAOS131 -registryhost 127.0.0.1
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:53:46.053
+!MESSAGE Connected to Wind River debug server backend at 127.0.0.1, 127.0.0.1:50435, PID=3648, Session="dfw-wb331-CHAOS131"
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:53:46.375
+!MESSAGE Wind River Debug Server API Version '2.12.0' (build name 'DFW_BUILD_3_3_1_21 - 06/23/2011 12:29:11')
+!SESSION 2014-10-27 19:54:58.060 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY com.windriver.ide.common.core 1 0 2014-10-27 19:55:02.983
+!MESSAGE Workbench license obtained in 0.03s, vendor information: <ln>78202</ln><flt>1</flt><ps>1851-1</ps>
+
+!ENTRY com.windriver.ide 1 0 2014-10-27 19:55:03.008
+!MESSAGE Workbench start-up time: 4.97s, Main window shown after: 4.42s.
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:55:03.033
+!MESSAGE C:\WindRiver\workbench-3.3\dfw\\x86-win32\bin\dfwserver.exe  -protocol mi -io sockets -useregistry -session dfw-wb331-CHAOS131 -registryhost 127.0.0.1
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:55:03.204
+!MESSAGE Connected to Wind River debug server backend at 127.0.0.1, 127.0.0.1:50462, PID=5800, Session="dfw-wb331-CHAOS131"
+
+!ENTRY com.windriver.ide.target 1 0 2014-10-27 19:55:03.560
+!MESSAGE Wind River Debug Server API Version '2.12.0' (build name 'DFW_BUILD_3_3_1_21 - 06/23/2011 12:29:11')
+!SESSION 2014-11-02 12:45:30.427 -----------------------------------------------
+eclipse.buildId=M20110311-1130/WB20110622-1135
+java.version=1.6.0_21
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -data C:\Users\CHAOS131\Documents\Build14\workspace2014 -os win32 -ws win32 -arch x86
+
+!ENTRY com.windriver.ide 1 0 2014-11-02 12:45:34.103
+!MESSAGE Workbench start-up time: 3.70s, Main window shown after: 3.70s.
+
+!ENTRY com.windriver.ide.common.core 1 0 2014-11-02 12:45:34.702
+!MESSAGE Workbench license obtained in 0.03s, vendor information: <ln>78202</ln><flt>1</flt><ps>1851-1</ps>
+
+!ENTRY com.windriver.ide.target 1 0 2014-11-02 12:45:34.745
+!MESSAGE C:\WindRiver\workbench-3.3\dfw\\x86-win32\bin\dfwserver.exe  -protocol mi -io sockets -useregistry -session dfw-wb331-CHAOS131 -registryhost 127.0.0.1
+
+!ENTRY com.windriver.ide.target 1 0 2014-11-02 12:45:34.929
+!MESSAGE Connected to Wind River debug server backend at 127.0.0.1, 127.0.0.1:49646, PID=3392, Session="dfw-wb331-CHAOS131"
+
+!ENTRY com.windriver.ide.target 1 0 2014-11-02 12:45:35.037
+!MESSAGE Wind River Debug Server API Version '2.12.0' (build name 'DFW_BUILD_3_3_1_21 - 06/23/2011 12:29:11')

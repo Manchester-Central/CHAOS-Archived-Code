@@ -1,0 +1,156 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Constants.h                                       
+ **                                                             
+ **   About:    
+ **                                                                
+ **   Property of Chaos, Copyright 2014
+ **   Written by:  
+ **              Ben Papp
+ **              Eric Moy
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+#include "Drive.h"
+
+Drive::Drive(void)
+{
+	//Talons
+	RightFrontDriveTalon = new Talon(RIGHT_FRONT_DRIVE_PORT);
+	RightMiddleDriveTalon = new Talon(RIGHT_MIDDLE_DRIVE_PORT);
+	RightBackDriveTalon = new Talon(RIGHT_BACK_DRIVE_PORT);
+	
+	LeftFrontDriveTalon = new Talon(LEFT_FRONT_DRIVE_PORT);
+	LeftMiddleDriveTalon = new Talon(LEFT_MIDDLE_DRIVE_PORT);
+	LeftBackDriveTalon = new Talon(LEFT_BACK_DRIVE_PORT);
+	
+	RightDriveEncoder = new Encoder(RIGHT_DRIVE_CHANNEL_A, RIGHT_DRIVE_CHANNEL_B, RIGHT_ENCODER_DIRECTION,Encoder::k4X);
+	LeftDriveEncoder = new Encoder(LEFT_DRIVE_CHANNEL_A, LEFT_DRIVE_CHANNEL_B, LEFT_ENCODER_DIRECTION,Encoder::k4X);
+	RightDriveEncoder->SetDistancePerPulse(DRIVE_INCHES_PER_COUNT);
+	LeftDriveEncoder->SetDistancePerPulse(DRIVE_INCHES_PER_COUNT);
+	
+	autoDriveEnable = false;
+	
+}
+
+void Drive::TeleopDrive(double LeftDrive, double RightDrive)
+{
+	RightFrontDriveTalon->SetSpeed(RightDrive*RIGHT_DRIVE_DIRECTION);
+	RightMiddleDriveTalon->SetSpeed(RightDrive*RIGHT_DRIVE_DIRECTION);
+	RightBackDriveTalon->SetSpeed(RightDrive*RIGHT_DRIVE_DIRECTION);
+	
+	LeftFrontDriveTalon->SetSpeed(LeftDrive*LEFT_DRIVE_DIRECTION);
+	LeftMiddleDriveTalon->SetSpeed(LeftDrive*LEFT_DRIVE_DIRECTION);
+	LeftBackDriveTalon->SetSpeed(LeftDrive*LEFT_DRIVE_DIRECTION);
+}
+
+void Drive::InitAutoDrive(double leftDistance, double rightDistance, double speed)
+{
+	Drive::leftDistance = leftDistance;
+	Drive::rightDistance = rightDistance;
+	
+	float denominator = fabs(rightDistance) + fabs(leftDistance);
+	
+	Drive::rightPower = (2 * rightDistance)/(denominator) * speed;
+	Drive::leftPower = (2 * leftDistance)/(denominator) * speed;
+
+	
+	RightDriveEncoder->Reset();
+	RightDriveEncoder->Start();
+	LeftDriveEncoder->Reset();
+	LeftDriveEncoder->Start();
+	
+	autoDriveEnable = true;
+}
+
+bool Drive::autoDrive(void)
+{
+	if(autoDriveEnable==true)
+	{
+		double rightDist = RightDriveEncoder->GetDistance();
+		double leftDist = LeftDriveEncoder->GetDistance();
+		
+		if(fabs(rightDist) + fabs(leftDist) <= fabs(rightDistance) + fabs(leftDistance))
+		{
+			
+			double rightPowerTemp = rightPower;
+			double leftPowerTemp = leftPower;
+						
+			rightPowerTemp -=(leftDist - rightDist) / DRIVE_TURN_GAIN;
+			leftPowerTemp -= (rightDist - leftDist) / DRIVE_TURN_GAIN;
+			
+			
+			
+			if(rightPowerTemp > MAX_CORRECTION)
+			{
+				rightPowerTemp = MAX_CORRECTION;
+			}
+			else if(rightPowerTemp < -MAX_CORRECTION)
+			{
+				rightPowerTemp = -MAX_CORRECTION;
+			}
+			
+			if(leftPowerTemp > MAX_CORRECTION)
+			{
+				leftPowerTemp = MAX_CORRECTION;
+			}
+			else if(leftPowerTemp < -MAX_CORRECTION)
+			{
+				leftPowerTemp = -MAX_CORRECTION;
+			}
+			
+			printf("left power: %f, right power: %f \n", leftPowerTemp, rightPowerTemp);
+
+			Drive::TeleopDrive(leftPowerTemp, rightPowerTemp);	
+			
+			
+			//printf("left encoder distance: %f ",LeftDriveEncoder->GetDistance());
+			//printf("right encoder distance: %f \n ",RightDriveEncoder->GetDistance());
+		}
+		else 
+		{
+			printf("left encoder distance: %f ",LeftDriveEncoder->GetDistance());
+			printf("right encoder distance: %f \n ",RightDriveEncoder->GetDistance());
+			
+			Drive::TeleopDrive(STOP, STOP);
+			autoDriveEnable = false;
+			
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+
+/*
+void Drive::AutoDrive(double leftDistance, double rightDistance, double speed)
+{
+
+	float rightPower = ((2* rightDistance)/(fabs(rightDistance) + fabs(leftDistance)))*speed;
+	float leftPower = ((2* leftDistance)/(fabs(rightDistance) + fabs(leftDistance)))*speed;
+
+	
+	RightDriveEncoder->Reset();
+	RightDriveEncoder->Start();
+	LeftDriveEncoder->Reset();
+	LeftDriveEncoder->Start();
+	
+	Drive::TeleopDrive(leftPower, rightPower);
+	
+	while(fabs(RightDriveEncoder->GetDistance()) + fabs(LeftDriveEncoder->GetDistance()) <= fabs(rightDistance) + fabs(leftDistance))
+	{
+		printf("left encoder distance: %f right encoder distance %f \n", LeftDriveEncoder->GetDistance(), RightDriveEncoder->GetDistance());
+	}
+	
+	Drive::TeleopDrive(STOP, STOP);
+}*/
+
+double Drive::getSpeed()
+{
+	return (RightDriveEncoder->GetPeriod() + LeftDriveEncoder->GetPeriod())/2.0;
+}

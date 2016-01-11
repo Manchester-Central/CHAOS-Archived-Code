@@ -1,0 +1,38 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Intake.h                                       
+ **                                                             
+ **   About:    
+ **                                                                
+ **   Property of Chaos, Copyright 2014
+ **   Written by:  
+ **              Ben Papp
+ **              Eric Moy
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+#ifndef INTAKE_H_
+#define INTAKE_H_
+
+class Intake
+{
+public:
+	Intake(void);
+	
+	//prototypes
+	
+	
+	
+private:
+	//things
+	
+};
+
+
+
+
+#endif

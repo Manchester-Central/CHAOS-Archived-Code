@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="completion_proposal_size">
+		<item value="574" key="size.x"/>
+		<item value="252" key="size.y"/>
+	</section>
+	<section name="CRenameRefactoringInputPage">
+		<item value="false" key="preprocessor"/>
+		<item value="3" key="scope"/>
+		<item value="false" key="macroDefinition"/>
+		<item value="false" key="comment"/>
+		<item value="" key="workingset"/>
+		<item value="false" key="references_inv"/>
+	</section>
+	<section name="org.eclipse.cdt.ui.text.hover.CMacroExpansionExploration">
+	</section>
+</section>

@@ -1,0 +1,26 @@
+ /*-------------------------------------------------------------**
+ **                                                             
+ **   Filename: Intake.cpp                                       
+ **                                                             
+ **   About:    
+ **                                                                
+ **   Property of Chaos, Copyright 2014
+ **   Written by:  
+ **              Ben Papp
+ **              Eric Moy
+ **               
+ **				  CHAOS.           
+ **                                                                                           
+ **   2014 1 13             
+ **                                                             
+ **-------------------------------------------------------------*/
+
+Intake::Intake()
+{
+	
+}
+
+void Intake::moveIntake(double power)
+{
+	
+}
