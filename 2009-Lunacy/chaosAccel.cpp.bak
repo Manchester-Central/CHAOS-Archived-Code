@@ -1,0 +1,83 @@
+/*----------------------------------------------------------------------------*
+* Copyright (c) CHAOS 2009
+*----------------------------------------------------------------------------*/
+
+#include "chaosAccel.h"
+#include "logger.h"
+
+#define CONVFACTOR -9.80665
+
+void chaosAccel::SetSensitivity(float Sensitivity)
+{ 
+	accel.SetSensitivity(Sensitivity);
+}
+
+void chaosAccel::SetZero(double Zero)
+{
+	accel.SetZero(Zero);
+}
+
+void chaosAccel::SetPrevious_lpf(double previous)
+{
+	lpf.SetPrevious(previous);
+}
+
+/**construct the chaosAccel object
+ * @param int Port
+ */
+
+chaosAccel::chaosAccel(int Port):accel(Port), lpf(0)
+{
+	period = 0;
+}
+
+/**
+ * Reset the chaosAccel. 
+ */
+void chaosAccel::Reset_lpf()
+{
+	lpf.Reset();
+}
+
+/**
+ * Delete (free) the chaosAccel.
+ */
+chaosAccel::~chaosAccel()
+{
+}
+
+/**
+ * calculates the value of acceleration
+ * @return vChassis
+ */
+
+double chaosAccel::GetValue()
+{
+	double accelValue;
+	double Ahpf;
+	double Alpf;
+	double vChassis;
+	accelValue = accel.GetAcceleration()*CONVFACTOR;
+	logger.accel = accelValue;
+//	
+	
+	Alpf = lpf.GetValue(accelValue);
+	Ahpf = accelValue - Alpf;
+	logger.accelf = Ahpf;
+	vChassis += Ahpf * period;
+	
+//	printf(" 1: %02.4f, 2: %02.4f ", Ahpf, vChassis);
+	
+	logger.vChassis = vChassis;
+	return vChassis;
+}
+
+/**
+*@param int Hertz Frequency of collecting data
+*@param double Period
+ */
+void chaosAccel::SetCoefficient_lpf(double Hertz, double Period)
+{
+	period = Period;
+	lpf.SetCoefficient(Hertz, Period);
+}

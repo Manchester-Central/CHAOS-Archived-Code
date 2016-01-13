@@ -1,0 +1,122 @@
+#ifndef CHAOS09_H
+#define CHAOS09_H
+
+#include "WPILib.h"
+#include "ChaosVision.h"
+#include "LowPassFilter.h"
+#include "chaosAccel.h"
+#include "chaosEncoder.h"
+#include "chaosLinear.h"
+#include "Gamepad.h"
+#include "visiontask.h"
+#include "math.h"
+//#include "DashboardDataFormat.h"
+
+
+
+class ChaosRobot : public IterativeRobot
+{
+	/* Objects */
+	
+	//Task visiontask;
+	Gamepad pilot1;
+	Gamepad pilot2;
+	Jaguar motor1;
+	Jaguar motor2;
+	Victor turret;
+	Jaguar shooter1;
+	Jaguar shooter2;
+    Relay unjammer;
+	Relay shootRoller;
+    Victor lifter;
+    Victor intake;
+	
+	chaosLinear linear_y;
+	chaosEncoder l_encoder;
+	chaosEncoder r_encoder;
+	Timer timer;
+	LowPassFilter LPF1;
+	LowPassFilter LPF2;
+	LowPassFilter LPFT;
+	Encoder turretencoder;
+	DigitalInput leftRight_DI;
+	DigitalInput additionalAngle_DI;
+	DigitalInput additionalDirection_DI;
+	DigitalInput mobileTracking_DI;
+	DigitalInput backwards_DI;
+	DigitalInput autoTurretCalibrate_DI;
+	Relay thelight;
+	
+//	DashboardDataFormat dashData;
+		
+public:
+	
+	ChaosRobot(void);
+	void func_drive(float rjoy, float ljoy);
+	void func_notraction(float rjoy, float ljoy);
+	void func_traction(float rjoy, float ljoy);
+	void func_tractioninit(void);
+	void RobotInit(void);
+	void DisabledInit(void);
+	void DisabledContinuous(void);
+	void AutonomousContinuous(void);
+	bool autonomousWait(float secs);
+
+	void TeleopContinuous(void);
+	void TurretTrack(void);
+	void TurretSelfCalibrate(void);
+	void Shooter(void);
+	void setSlewPower(float power);
+	void TurretReadCalibration();
+	int readTurretEncoder();
+	bool AutoTrack(void);
+	void MobileAutoTrack(void);
+	void slewControl(float rightDirection, float leftDirection);
+	static int sign(float x);
+	void TeleopInit(void);
+	void readCalibrationFile(void);
+	void writeCalibrationFile(void);
+	
+	int m_turretLeftLimit; 
+	int m_turretRightLimit;
+	int range;
+	
+    float VerrorL_Integral;
+	float VerrorR_Integral;
+	float VerrorL;
+	float VerrorR;
+	float JoyLDelta;
+	float JoyRDelta;
+	
+	float PreviousLJoyY;
+	float PreviousRJoyY;
+	
+	float lastGyroTime;
+	float shooterpower;
+	
+	// Caution - cal file is read directly into these...
+	// don't change to doubles without changing cal file handling
+	float KPL, dummy, KPR, KIL, KIR;
+	
+	int modeloops;
+	
+	enum{kslewleft, kslewright, ktrack} turretstate;
+	
+	static ChaosRobot& getChaosRobot()
+	{
+		return (ChaosRobot&) getInstance();
+	}
+	static Dashboard& getDashboard()
+	{
+		return getChaosRobot().getMyDashboard();
+	}
+	Dashboard& getMyDashboard()
+	{
+		return m_ds->GetDashboardPacker();
+	}
+
+};
+
+#endif
+
+

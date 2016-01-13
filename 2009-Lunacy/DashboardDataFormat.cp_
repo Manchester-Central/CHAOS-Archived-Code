@@ -1,0 +1,363 @@
+
+#include "DashboardDataFormat.h"
+#include "Logger.h"
+
+//Logger logger;
+
+DashboardDataFormat::DashboardDataFormat(Dashboard& dash)
+	: dashboardPacker(dash)
+{
+	
+}
+
+DashboardDataFormat::~DashboardDataFormat()
+{
+	
+}
+
+/**
+ * Pack data using the correct types and in the correct order to match the
+ * default "Dashboard Datatype" in the LabVIEW Dashboard project.
+ */
+void DashboardDataFormat::PackAndSend(void)
+{
+	
+	//	********************************************************************
+	//		Change this number any time the data structure changes
+	//	version 1
+	//
+	//
+	unsigned char version = 1;
+	//
+	//	*********************************************************************
+
+	// Pack the analog modules
+	/*for (module = 0; module < kAnalogModules; module++)
+	{
+		dashboardPacker.AddCluster();
+		for (channel = 0; channel < kAnalogChannels; channel++)
+		{
+			dashboardPacker.AddFloat(m_AnalogChannels[module][channel]);
+		}
+		dashboardPacker.FinalizeCluster();
+	}*/
+	
+	float leftActualSpeed = 1; //logger.vChaSide[0];
+	float rightActualSpeed = 2; //logger.vChaSide[1];
+	float leftSpinSpeed = -3;
+	float rightSpinSpeed = -4;
+	float acceleramoter1 = logger.accel;
+	float acceleramoter2 = -5;
+	float gyro = logger.gyro;
+	float driverJoyStick1 = logger.driverJoy[0];
+	float driverJoyStick2 = logger.driverJoy[1];
+	float shooterJoyStick1 = -99;
+	float shooterJoyStick2 = -99;
+	float leftEncoder = logger.chassisEncoders[0];
+	float rightEncoder = logger.chassisEncoders[1];
+	float turretEncoder = -99;
+	float leftTractionControlValue = logger.chassisWindup[0];
+	float rightTractionControlValue = logger.chassisWindup[1];
+	float tractionControlPeriod = logger.actualPeriod;
+	float tractionControlFrequency = -99;
+	float leftTractionControlKp = logger.KP[0];
+	float rightTractionControlKp = logger.KP[1];
+	float leftTractionControlKi = logger.KI[0];
+	float rightTractionControlKi = logger.KI[1];
+	float target1x = -99;
+	float target2x = -99;
+	float target3x = -99;
+	float target1y = -99;
+	float target2y = -99;
+	float target3y = -99;
+	float target1Range = -99;
+	float target2Range = -99;
+	float target3Range = -99;
+	float shooterPowerValue = -99;
+	float shooterPowerGainPerm = -99;
+	float shooterPowerGainTemp = -99;
+	float cameraAnglePerm = -99;
+	float cameraAngleTemp = -99;
+	
+	unsigned char teamAssociation = 1;
+	unsigned char autoAngle = 0;
+	unsigned char autoDirection = 1;
+	unsigned char mobileTracking = 0;
+	unsigned char reverseSwitch = 1;
+	unsigned short driverButtons  = 0;
+	unsigned short shooterButtons = 1;
+	unsigned char tractionControlOnOff = 0;
+	unsigned char trackerModeManualAuto = 1;
+	unsigned char target1Acquired = 0;
+	unsigned char target2Acquired = 1;
+	unsigned char target3Acquired = 0;
+	unsigned char target1LockedUnlocked = 1;
+	unsigned char target2LockedUnlocked = 0;
+	unsigned char target3LockedUmlocked = 1;
+	unsigned char pinkHMax = 1;
+	unsigned char pinkHMin = 2;
+	unsigned char pinkSMax = 3;
+	unsigned char pinkSMin = 4;
+	unsigned char pinkLMax = 5;
+	unsigned char pinkLMin = 6;
+	unsigned char greenHMax = 7;
+	unsigned char greenHMin = 8;
+	unsigned char greenSMax = 9;
+	unsigned char greenSMin = 0;
+	unsigned char greenLMax = 1;
+	unsigned char greenLMin = 2;
+	unsigned char centerH = 3;
+	unsigned char centerS = 4;
+	unsigned char centerL = 5;
+
+
+	
+	//	SPEED/SPIN CLUSTER - 7 floats
+	dashboardPacker.AddCluster();
+	//	left actual speed
+	dashboardPacker.AddFloat(leftActualSpeed);
+	//	right actual speed
+	dashboardPacker.AddFloat(rightActualSpeed);
+	//	left spin speed
+	dashboardPacker.AddFloat(leftSpinSpeed);
+	//	right spin speed
+	dashboardPacker.AddFloat(rightSpinSpeed);
+	//	acceleramoter1 
+	dashboardPacker.AddFloat(acceleramoter1);
+	//	acceleramotor2
+	dashboardPacker.AddFloat(acceleramoter2);
+	//	gyro
+	dashboardPacker.AddFloat(gyro);
+	dashboardPacker.FinalizeCluster();
+	//	SPEED/SPIN CLUSTER
+	
+	//	DRIVER JOYSTICK CLUSTER -  2 floats
+	dashboardPacker.AddCluster();
+	//	driver joysyick 1
+	dashboardPacker.AddFloat(driverJoyStick1);
+	//	driver joysyick 2
+	dashboardPacker.AddFloat(driverJoyStick2);	
+	dashboardPacker.FinalizeCluster();
+	//	DRIVER JOYSTICK CLUSTER
+	
+	
+	//	SHOOTER JOYSTICK CLUSTER -  2 floats
+	dashboardPacker.AddCluster();
+	// shooter joysyick 1
+	dashboardPacker.AddFloat(shooterJoyStick1);
+	//	shooter joysyick 2
+	dashboardPacker.AddFloat(shooterJoyStick2);	
+	dashboardPacker.FinalizeCluster();
+	//	SHOOTER JOYSTICK CLUSTER
+	
+	
+	//	CHASSIS ENCODER CLUSTER- 2 floats	
+	dashboardPacker.AddCluster();
+	//	left encoder
+	dashboardPacker.AddFloat(leftEncoder);		
+	//	right encoder
+	dashboardPacker.AddFloat(rightEncoder);	
+	dashboardPacker.FinalizeCluster();
+	//	CHASSIS ENCODER CLUSTER
+	
+	
+	//	TURRET ENCODER CLUSTER -  1 float
+	dashboardPacker.AddCluster();
+	//	turret encoder
+	dashboardPacker.AddFloat(turretEncoder);
+	dashboardPacker.FinalizeCluster();
+	//	TURRET ENCODER CLUSTER
+	
+	
+	//	TRACTION CONTROL CLUSTER - 8 floats
+	dashboardPacker.AddCluster();
+	//	left traction control value
+	dashboardPacker.AddFloat(leftTractionControlValue);	
+	//	right traction control values
+	dashboardPacker.AddFloat(rightTractionControlValue);
+	//	traction control period
+	dashboardPacker.AddFloat(tractionControlPeriod);	
+	//	traction control frequency
+	dashboardPacker.AddFloat(tractionControlFrequency);
+	//	left traction control gain proportion
+	dashboardPacker.AddFloat(leftTractionControlKp);	
+	//	right traction control gain proportion
+	dashboardPacker.AddFloat(rightTractionControlKp);
+	//	left traction control gain integral
+	dashboardPacker.AddFloat(leftTractionControlKi);	
+	//	right traction control gain integral
+	dashboardPacker.AddFloat(rightTractionControlKi);
+	dashboardPacker.FinalizeCluster();
+	//	TRACTION CONTROL CLUSTER
+	
+	
+	//	TARGET POSITION CLUSTER - 9 floats
+	dashboardPacker.AddCluster();
+	//	target 1x
+	dashboardPacker.AddFloat(target1x);
+	//	target 2x
+	dashboardPacker.AddFloat(target2x);
+	//	target 3x
+	dashboardPacker.AddFloat(target3x);
+	//	target 1y
+	dashboardPacker.AddFloat(target1y);
+	//	target 2y
+	dashboardPacker.AddFloat(target2y);
+	//	target 3y
+	dashboardPacker.AddFloat(target3y);
+	//	target 1range
+	dashboardPacker.AddFloat(target1Range);
+	//	target 2range
+	dashboardPacker.AddFloat(target2Range);
+	//	target 3range
+	dashboardPacker.AddFloat(target3Range);	
+	dashboardPacker.FinalizeCluster();
+	//	TARGET POSITION CLUSTER
+	
+	
+	//	SHOOTER POWER CLUSTER - 3 floats
+	dashboardPacker.AddCluster();
+	//	shooter power value
+	dashboardPacker.AddFloat(shooterPowerValue);	
+	//	shooter power gain perm
+	dashboardPacker.AddFloat(shooterPowerGainPerm);
+	//	shooter power gain temp
+	dashboardPacker.AddFloat(shooterPowerGainTemp);
+	dashboardPacker.FinalizeCluster();
+	//	SHOOTER POWER CLUSTER
+	
+	
+	//	CAMERA ANGLE CLUSTER -  2 floats
+	dashboardPacker.AddCluster();
+	//	camera angle perm
+	dashboardPacker.AddFloat(cameraAnglePerm);
+	//	camera angle temp
+	dashboardPacker.AddFloat(cameraAngleTemp);
+	dashboardPacker.FinalizeCluster();
+	//	CAMERA ANGLE CLUSTER
+	
+
+	
+	// SWITCH CLUSTER - 5 int 8
+	dashboardPacker.AddCluster();
+	// team association 8
+	dashboardPacker.AddU8(teamAssociation);
+	// auto angle 9
+	dashboardPacker.AddU8(autoAngle);	
+	// auto direction 10
+	dashboardPacker.AddU8(autoDirection);	
+	// mobile tracking 11
+	dashboardPacker.AddU8(mobileTracking);	
+	// reverse switch 12
+	dashboardPacker.AddU8(reverseSwitch);
+	dashboardPacker.FinalizeCluster();
+	// SWITCH CLUSTER
+	
+	// DRIVER BUTTON CLUSTER - 1 int16
+	dashboardPacker.AddCluster();
+	// driver buttons
+	dashboardPacker.AddU16(driverButtons);
+	dashboardPacker.FinalizeCluster();
+	// DRIVER BUTTON CLUSTER
+	
+	// SHOOTER BUTTON CLUSTER - 1 int16
+	dashboardPacker.AddCluster();
+	// shooter buttons
+	dashboardPacker.AddU16(shooterButtons);	
+	dashboardPacker.FinalizeCluster();
+	// SHOOTER BUTTON CLUSTER
+	
+	// TRACTION CONTROL CLUSTER - 1 int8
+	dashboardPacker.AddCluster();
+	// traction control on/off
+	dashboardPacker.AddU8(tractionControlOnOff);
+	dashboardPacker.FinalizeCluster();
+	// TRACTION CONTROL CLUSTER
+	
+	// TRACKING TARGET CLUSTER - 7 int8
+	dashboardPacker.AddCluster();
+	// tracker mode manual/auto
+	dashboardPacker.AddU8(trackerModeManualAuto);	
+	// target 1 acquired
+	dashboardPacker.AddU8(target1Acquired);
+	// target 2 acquired
+	dashboardPacker.AddU8(target2Acquired);
+	// target 3 acquired
+	dashboardPacker.AddU8(target3Acquired);
+	// target 1 locked/unlocked
+	dashboardPacker.AddU8(target1LockedUnlocked);
+	// target 2 locked/unlocked
+	dashboardPacker.AddU8(target2LockedUnlocked);
+	// target 3 lockedunlocked
+	dashboardPacker.AddU8(target3LockedUmlocked);
+	dashboardPacker.FinalizeCluster();
+	// TRACKING TARGET CLUSTER
+	
+	//COLOR CLUSTER - int u8   15
+	dashboardPacker.AddCluster();
+	// pink hue max
+	dashboardPacker.AddU8(pinkHMax);
+	// pink hue min
+	dashboardPacker.AddU8(pinkHMin);
+	// pink sat max
+	dashboardPacker.AddU8(pinkSMax);
+	// pink sat min
+	dashboardPacker.AddU8(pinkSMin);
+	// pink lum max
+	dashboardPacker.AddU8(pinkLMax);
+	// pink lum min
+	dashboardPacker.AddU8(pinkLMin);
+	// green hue max
+	dashboardPacker.AddU8(greenHMax);
+	// green hue min
+	dashboardPacker.AddU8(greenHMin);
+	// green sat max
+	dashboardPacker.AddU8(greenSMax);
+	// green sat min
+	dashboardPacker.AddU8(greenSMin);
+	// green lum max
+	dashboardPacker.AddU8(greenLMax);
+	// green lum min
+	dashboardPacker.AddU8(greenLMin);
+	// center of camera  hue
+	dashboardPacker.AddU8(centerH);
+	// center of camera  sat
+	dashboardPacker.AddU8(centerS);
+	// center of camera  lum
+	dashboardPacker.AddU8(centerL);
+	dashboardPacker.FinalizeCluster();
+	//COLOR CLUSTER
+
+	
+	
+	
+	// VERSION CLUSTER - 1 int8
+	// Pack the digital modules
+	dashboardPacker.AddCluster();
+	//version 1
+	dashboardPacker.AddU8(version);
+	dashboardPacker.FinalizeCluster();
+	// VERSION CLUSTER
+	
+	
+	/*for (module = 0; module < kDigitalModules; module++)
+	{
+		dashboardPacker.AddCluster();
+		dashboardPacker.AddU8(m_RelayFwd[module]);
+		dashboardPacker.AddU8(m_RelayRev[module]);
+		dashboardPacker.AddU16(m_DIOChannels[module]);
+		dashboardPacker.AddU16(m_DIOChannelsOutputEnable[module]);
+		dashboardPacker.AddCluster();
+		for(channel = 0; channel < kPwmChannels; channel++)
+		{
+			dashboardPacker.AddU8(m_PWMChannels[module][channel]);
+		}
+		dashboardPacker.FinalizeCluster();
+		dashboardPacker.FinalizeCluster();
+	}
+	// Pack the solenoid modul
+	dashboardPacker.AddU8(m_SolenoidChannels);*/
+
+	// Flush the data to the driver station.
+	dashboardPacker.Finalize();
+}
